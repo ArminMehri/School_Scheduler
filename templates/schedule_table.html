@@ -1,3 +1,4 @@
+{% load schedule_tags %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="fa">
@@ -5,97 +6,176 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>برنامه درسی مدارس</title>
-    <link rel="icon" href="{% static 'assets/images/MoshaverMan.png' %}" type="image/x-icon">
+
+    <link rel="icon" href="{% static 'assets/images/Logo.png' %}" type="image/x-icon">
     <link href="{% static 'assets/css/app.min.css' %}" rel="stylesheet">
     <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
 
     <style>
+
         body { font-family: 'Vazir', sans-serif; direction: rtl; text-align: right; margin: 0; padding: 0; }
         .container { max-width: 1200px; margin: auto; padding: 20px; }
-        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
         .logo-title { display: flex; align-items: center; gap: 15px; }
-        .logo-title img { height: 60px; border-radius: 5px; object-fit: contain; }
+        .logo-title img { height: 100px; border-radius: 16px; object-fit: contain; }
         .logo-title h2 { margin: 0; font-size: 24px; }
-        .gradient-btn { padding: 8px 16px; border-radius: 30px; color: #fff; font-weight: bold; cursor: pointer; background: linear-gradient(45deg, #ff416c, #ff4b2b); border: none; }
+
+        .gradient-btn {
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            border: none;
+        }
+
         .gradient-btn:hover { opacity: 0.9; }
 
-        table.schedule-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; table-layout: fixed; }
-        table.schedule-table th, table.schedule-table td { border: 1px solid #ddd; padding: 8px; text-align: center; vertical-align: middle; word-wrap: break-word; }
-        table.schedule-table th { background-color: #f5f5f5; font-weight: bold; }
-        table.schedule-table tbody tr:nth-child(even) { background-color: #fafafa; }
-        .lesson-name { font-weight: bold; color: #d32f2f; } /* درس مهم یا نمونه قرمز */
+        table.schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+            table-layout: fixed;
+        }
+
+        table.schedule-table th,
+        table.schedule-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
+        }
+
+        table.schedule-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        table.schedule-table tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .lesson-name { font-weight: bold; color: #d32f2f; }
         .teacher-name { font-size: 12px; color: #555; }
 
         @media screen and (max-width: 768px) {
-            table.schedule-table th, table.schedule-table td { font-size: 10px; padding: 4px; }
+            table.schedule-table th,
+            table.schedule-table td {
+                font-size: 10px;
+                padding: 4px;
+            }
             .logo-title h2 { font-size: 18px; }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="top-header">
-            <div class="logo-title">
-                <img src="{% static 'assets/images/MoshaverMan.png' %}" alt="لوگو">
-                <h2>برنامه درسی مدارس</h2>
-            </div>
-            <div>
-                <a href="{% url 'admin:index' %}" class="gradient-btn">پنل ادمین</a>
-                <button class="gradient-btn" id="buildScheduleBtn">🛠 تولید برنامه مدرسه</button>
-            </div>
+<div class="container">
+
+    <div class="top-header">
+        <div class="logo-title">
+            <img src="{% static 'assets/images/Logo.png' %}" alt="لوگو">
+            <h2>برنامه درسی مدارس</h2>
         </div>
 
-        {% comment %}
-        ساخت جدول برای هر کلاس
-        {% endcomment %}
-        {% for school_class in classes %}
+        <div>
+            <a href="{% url 'admin:index' %}" class="gradient-btn">پنل ادمین</a>
+{#            <button class="gradient-btn" id="buildScheduleBtn">🛠 تولید برنامه مدرسه</button>#}
+            <a href="{% url 'export_word' %}" class="gradient-btn">
+             📥 خروجی Word
+            </a>
+            <a href="{% url 'export_excel' %}" class="gradient-btn">
+             📥 خروجی Excel
+            </a>
+        </div>
+    </div>
+
+
+    {% for school_class in classes %}
         <h3>کلاس {{ school_class.name }} - پایه {{ school_class.grade.name }}</h3>
+
         <table class="schedule-table">
             <thead>
                 <tr>
                     {% for day in days %}
-                        {% for period in day.periods %}
-                            <th>{{ day.name }} - زنگ {{ period.number }}</th>
+                        {% for period in day.dayperiod_set.all %}
+                            <th>{{ day.name }} - زنگ {{ period.period_number }}</th>
                         {% endfor %}
                     {% endfor %}
                 </tr>
             </thead>
+
             <tbody>
                 <tr>
                     {% for day in days %}
-                        {% for period in day.periods %}
-                            {% with sched=data_table|get_schedule_for:school_class|get_item:day:get_item:period %}
+                        {% for period in day.dayperiod_set.all %}
+
+                            {% with class_data=data_table|get_item:school_class.id %}
+                            {% with day_data=class_data|get_item:day.id %}
+                            {% with sched=day_data|get_item:period.id %}
+
                                 {% if sched %}
                                     <td>
-                                        <span class="lesson-name">{{ sched.lesson.name }}</span><br>
-                                        <span class="teacher-name">{{ sched.teacher.name }}</span>
+                                        <span class="lesson-name">
+                                            {{ sched.lesson.name }}
+                                        </span>
+                                        <br>
+                                        <span class="teacher-name">
+                                            {{ sched.teacher.name }}
+                                        </span>
                                     </td>
                                 {% else %}
                                     <td>---</td>
                                 {% endif %}
+
                             {% endwith %}
+                            {% endwith %}
+                            {% endwith %}
+
                         {% endfor %}
                     {% endfor %}
                 </tr>
             </tbody>
         </table>
-        {% endfor %}
-    </div>
+    {% endfor %}
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $('#buildScheduleBtn').click(function(){
-            const btn = $(this);
-            btn.prop('disabled', true).text('در حال تولید...');
-            $.post("{% url 'build_schedule' %}", {"csrfmiddlewaretoken": "{{ csrf_token }}"}, function(data){
-                if(data.status === 'success'){
-                    location.reload();
-                } else {
-                    alert("خطا در تولید برنامه!");
-                    btn.prop('disabled', false).text('🛠 تولید برنامه مدرسه');
-                }
-            });
-        });
-    </script>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{#<script>#}
+{#    $('#buildScheduleBtn').click(function(){#}
+{#        const btn = $(this);#}
+{#        btn.prop('disabled', true).text('در حال تولید...');#}
+{##}
+{#        $.post("{% url 'build_schedule' %}", {#}
+{#            "csrfmiddlewaretoken": "{{ csrf_token }}"#}
+{#        }, function(data){#}
+{##}
+{#            if(data.status === 'success'){#}
+{#                location.reload();#}
+{#            } else {#}
+{#                alert(data.errors ? data.errors.join("\n") : "خطا در تولید برنامه!");#}
+{#                btn.prop('disabled', false).text('🛠 تولید برنامه مدرسه');#}
+{#            }#}
+{##}
+{#        }).fail(function(xhr){#}
+{#            alert("خطای سرور:\n" + xhr.responseJSON.errors.join("\n"));#}
+{#            btn.prop('disabled', false).text('🛠 تولید برنامه مدرسه');#}
+{#        });#}
+{#    });#}
+{#</script>#}
+
 </body>
 </html>
