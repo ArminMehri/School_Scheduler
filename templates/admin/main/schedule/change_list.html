@@ -2,7 +2,22 @@
 
 {% block object-tools %}
     {{ block.super }}
-    <a href="{% url 'admin:schedule-build' %}" class="button" style="background:#4caf50;color:white;padding:5px 10px;border-radius:5px;">
-        🛠 تولید برنامه مدرسه
-    </a>
+    <a href="{% url 'admin:schedule-build' %}" class="btn gradient-btn"; style="color: black">
+    🛠 تولید برنامه مدرسه
+</a>
+<style>
+.gradient-btn {
+    background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.gradient-btn:hover {
+    filter: brightness(1.2);
+    transform: scale(1.05);
+}
+</style>
 {% endblock %}
