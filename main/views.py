@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from main.models import Schedule
@@ -11,7 +11,7 @@ from docx.shared import Pt
 from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
-
+from main.services.scheduler import generate_schedule
 from .models import SchoolClass, Schedule
 import openpyxl
 from openpyxl.styles import Alignment, Font
@@ -241,3 +241,18 @@ def build_schedule(request):
         "status": "success",
         "message": "برنامه با موفقیت تولید شد"
     })
+
+def schedule_build_view(request):
+    if request.method == "POST" and "clear_logs" in request.POST:
+        # پاک کردن لاگ‌ها
+        request.session['schedule_logs'] = []
+        return redirect('schedule-build')
+
+    if request.method == "POST" and "generate_schedule" in request.POST:
+        logs = generate_schedule(max_attempts=1)
+        request.session['schedule_logs'] = logs
+        return redirect('schedule-build')
+
+    # دریافت لاگ‌ها از session
+    logs = request.session.get('schedule_logs', [])
+    return render(request, "schedule_logs.html", {"logs": logs})

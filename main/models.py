@@ -31,16 +31,54 @@ class DayPeriod(models.Model):
         return f"{self.day.name} - زنگ {self.period_number}"
 class Lesson(models.Model):
     name = models.CharField(max_length=100)
-    priority = models.IntegerField(default=1)  # درجه سختی (مثلا 1 تا 5)
+    priority = models.IntegerField(default=1)
+
+    weekly_hours = models.IntegerField(
+        default=2,
+        verbose_name="ساعت در هفته"
+    )
+
+    for_all_grades = models.BooleanField(
+        default=False,
+        verbose_name="برای همه پایه‌ها"
+    )
+
+    grades = models.ManyToManyField(
+        "Grade",
+        blank=True,
+        verbose_name="پایه‌های مرتبط"
+    )
 
     def __str__(self):
         return self.name
 class Teacher(models.Model):
     name = models.CharField(max_length=100)
-    weekly_capacity = models.IntegerField()  # حداکثر ساعت تدریس در هفته
-    lessons = models.ManyToManyField(Lesson)
+
+    weekly_capacity = models.IntegerField(
+        verbose_name="ظرفیت هفتگی (ساعت)"
+    )
+
+    lessons = models.ManyToManyField(
+        "Lesson",
+        verbose_name="درس‌های قابل تدریس"
+    )
+
+    # 🔹 آیا پایه محدود دارد؟
+    limit_to_grades = models.BooleanField(
+        default=False,
+        verbose_name="محدود به پایه خاص"
+    )
+
+    # 🔹 اگر محدود باشد این‌ها فعال می‌شود
+    grades = models.ManyToManyField(
+        "Grade",
+        blank=True,
+        verbose_name="پایه‌های مجاز"
+    )
+
     def __str__(self):
         return self.name
+
 class TeacherAvailability(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
     day = models.ForeignKey(SchoolDay, on_delete=models.CASCADE)
@@ -63,17 +101,39 @@ class TeachingAssignmentItem(models.Model):
     def __str__(self):
         return f"{self.lesson.name} - {self.school_class.name} ({self.weekly_hours} ساعت)"
 class Schedule(models.Model):
-    school_class = models.ForeignKey(SchoolClass, on_delete=models.CASCADE, db_index=True)
-    day_period = models.ForeignKey(DayPeriod, on_delete=models.CASCADE, db_index=True)
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, db_index=True)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, db_index=True)
+    school_class = models.ForeignKey(
+        SchoolClass,
+        on_delete=models.CASCADE,
+        db_index=True
+    )
+
+    day_period = models.ForeignKey(
+        DayPeriod,
+        on_delete=models.CASCADE,
+        db_index=True
+    )
+
+    teacher = models.ForeignKey(
+        Teacher,
+        on_delete=models.SET_NULL,  # مهم
+        null=True,                  # اجازه None
+        blank=True,
+        db_index=True
+    )
+
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        db_index=True
+    )
 
     class Meta:
         unique_together = [
-            ('school_class', 'day_period'),  # کلاس تداخل نداشته باشد
-            ('teacher', 'day_period'),       # معلم تداخل نداشته باشد
+            ('school_class', 'day_period'),
+            ('teacher', 'day_period'),
         ]
 
     def __str__(self):
         return f"{self.school_class} - {self.day_period}"
+
 

@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django.urls import path
 from django.shortcuts import redirect
-
+from django.utils.html import format_html
 from .services.scheduler import generate_schedule
 from .services.auto_assign import auto_assign_teachers
 
@@ -31,9 +31,9 @@ class TeacherAvailabilityInline(admin.TabularInline):
 
 @admin.register(Teacher)
 class TeacherAdmin(admin.ModelAdmin):
-    list_display = ('name', 'weekly_capacity')
+    list_display = ('name', 'weekly_capacity', 'limit_to_grades')
     search_fields = ('name',)
-    inlines = [TeacherAvailabilityInline]
+    filter_horizontal = ('lessons', 'grades')
 
 
 # ============================================================
@@ -52,7 +52,7 @@ class SchoolClassAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ('name', 'priority')
+    list_display = ('name', 'priority','weekly_hours')
     search_fields = ('name',)
 
 
@@ -108,11 +108,19 @@ class TeachingAssignmentAdmin(admin.ModelAdmin):
 
 @admin.register(Schedule)
 class ScheduleAdmin(admin.ModelAdmin):
-    list_display = ('school_class', 'day_period', 'lesson', 'teacher')
+    list_display = ('school_class', 'day_period', 'lesson', 'colored_teacher')
     list_filter = ('school_class', 'day_period__day')
     search_fields = ('school_class__name', 'lesson__name', 'teacher__name')
     change_list_template = "admin/main/schedule/change_list.html"
 
+    def colored_teacher(self, obj):
+        if obj.teacher:
+            return obj.teacher.name
+        return format_html(
+            '<span style="color:red; font-weight:bold;">بدون دبیر</span>'
+        )
+
+    colored_teacher.short_description = "دبیر"
     # دکمه Generate Schedule
     def get_urls(self):
         urls = super().get_urls()
@@ -126,13 +134,21 @@ class ScheduleAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def build_schedule_view(self, request):
+        from .models import TeachingAssignmentItem
+
         try:
+            # اگر هیچ assignment وجود نداشت → اول auto assign
+            if not TeachingAssignmentItem.objects.exists():
+                auto_assign_teachers()
+
             generate_schedule()
+
             self.message_user(
                 request,
                 "برنامه درسی با موفقیت تولید شد.",
                 level=messages.SUCCESS,
             )
+
         except Exception as e:
             self.message_user(
                 request,
