@@ -12,9 +12,18 @@
     <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
 
     <style>
+        body {
+            font-family: 'Vazir', sans-serif;
+            direction: rtl;
+            margin: 0;
+            padding: 0;
+            background: #f8f9fa;
+        }
 
-        body { font-family: 'Vazir', sans-serif; direction: rtl; text-align: right; margin: 0; padding: 0; }
-        .container { max-width: 1200px; margin: auto; padding: 20px; }
+        .container {
+            max-width: 100%;
+            padding: 20px;
+        }
 
         .top-header {
             display: flex;
@@ -25,9 +34,20 @@
             gap: 10px;
         }
 
-        .logo-title { display: flex; align-items: center; gap: 15px; }
-        .logo-title img { height: 100px; border-radius: 16px; object-fit: contain; }
-        .logo-title h2 { margin: 0; font-size: 24px; }
+        .logo-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-title img {
+            height: 90px;
+            border-radius: 16px;
+        }
+
+        .logo-title h2 {
+            margin: 0;
+        }
 
         .gradient-btn {
             padding: 8px 16px;
@@ -37,45 +57,71 @@
             cursor: pointer;
             background: linear-gradient(45deg, #ff416c, #ff4b2b);
             border: none;
+            text-decoration: none;
         }
 
-        .gradient-btn:hover { opacity: 0.9; }
+        .gradient-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* مهم: اسکرول افقی */
+        .table-wrapper {
+            overflow-x: auto;
+            background: #fff;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
 
         table.schedule-table {
-            width: 100%;
             border-collapse: collapse;
-            margin-bottom: 40px;
-            table-layout: fixed;
+            min-width: 1200px; /* جلوگیری از فشرده شدن */
         }
 
         table.schedule-table th,
         table.schedule-table td {
             border: 1px solid #ddd;
-            padding: 8px;
             text-align: center;
             vertical-align: middle;
-            word-wrap: break-word;
+            padding: 6px;
+            min-width: 110px; /* عرض ثابت هر خانه */
+            height: 70px;
         }
 
         table.schedule-table th {
-            background-color: #f5f5f5;
+            background-color: #f1f1f1;
             font-weight: bold;
+            font-size: 13px;
         }
 
         table.schedule-table tbody tr:nth-child(even) {
             background-color: #fafafa;
         }
 
-        .lesson-name { font-weight: bold; color: #d32f2f; }
-        .teacher-name { font-size: 12px; color: #555; }
+        .lesson-name {
+            font-weight: bold;
+            color: #d32f2f;
+            font-size: 13px;
+            display: block;
+        }
+
+        .teacher-name {
+            font-size: 12px;
+            color: #444;
+            display: block;
+            margin-top: 4px;
+        }
+
+        h3 {
+            margin-top: 40px;
+        }
 
         @media screen and (max-width: 768px) {
             table.schedule-table th,
             table.schedule-table td {
+                min-width: 90px;
                 font-size: 10px;
-                padding: 4px;
             }
-            .logo-title h2 { font-size: 18px; }
         }
     </style>
 </head>
@@ -91,91 +137,64 @@
 
         <div>
             <a href="{% url 'admin:index' %}" class="gradient-btn">پنل ادمین</a>
-{#            <button class="gradient-btn" id="buildScheduleBtn">🛠 تولید برنامه مدرسه</button>#}
-            <a href="{% url 'export_word' %}" class="gradient-btn">
-             📥 خروجی Word
-            </a>
-            <a href="{% url 'export_excel' %}" class="gradient-btn">
-             📥 خروجی Excel
-            </a>
+            <a href="{% url 'export_word' %}" class="gradient-btn">📥 خروجی Word</a>
+            <a href="{% url 'export_excel' %}" class="gradient-btn">📥 خروجی Excel</a>
         </div>
     </div>
-
 
     {% for school_class in classes %}
         <h3>کلاس {{ school_class.name }} - پایه {{ school_class.grade.name }}</h3>
 
-        <table class="schedule-table">
-            <thead>
-                <tr>
-                    {% for day in days %}
-                        {% for period in day.dayperiod_set.all %}
-                            <th>{{ day.name }} - زنگ {{ period.period_number }}</th>
+        <div class="table-wrapper">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        {% for day in days %}
+                            {% for period in day.dayperiod_set.all %}
+                                <th>
+                                    {{ day.name }}<br>
+                                    زنگ {{ period.period_number }}
+                                </th>
+                            {% endfor %}
                         {% endfor %}
-                    {% endfor %}
-                </tr>
-            </thead>
+                    </tr>
+                </thead>
 
-            <tbody>
-                <tr>
-                    {% for day in days %}
-                        {% for period in day.dayperiod_set.all %}
+                <tbody>
+                    <tr>
+                        {% for day in days %}
+                            {% for period in day.dayperiod_set.all %}
 
-                            {% with class_data=data_table|get_item:school_class.id %}
-                            {% with day_data=class_data|get_item:day.id %}
-                            {% with sched=day_data|get_item:period.id %}
+                                {% with class_data=data_table|get_item:school_class.id %}
+                                {% with day_data=class_data|get_item:day.id %}
+                                {% with sched=day_data|get_item:period.id %}
 
-                                {% if sched %}
                                     <td>
-                                        <span class="lesson-name">
-                                            {{ sched.lesson.name }}
-                                        </span>
-                                        <br>
-                                        <span class="teacher-name">
-                                            {{ sched.teacher.name }}
-                                        </span>
+                                        {% if sched %}
+                                            <span class="lesson-name">
+                                                {{ sched.lesson.name }}
+                                            </span>
+                                            <span class="teacher-name">
+                                                {{ sched.teacher.name }}
+                                            </span>
+                                        {% else %}
+                                            ---
+                                        {% endif %}
                                     </td>
-                                {% else %}
-                                    <td>---</td>
-                                {% endif %}
 
-                            {% endwith %}
-                            {% endwith %}
-                            {% endwith %}
+                                {% endwith %}
+                                {% endwith %}
+                                {% endwith %}
 
+                            {% endfor %}
                         {% endfor %}
-                    {% endfor %}
-                </tr>
-            </tbody>
-        </table>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
     {% endfor %}
 
 </div>
-
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-{#<script>#}
-{#    $('#buildScheduleBtn').click(function(){#}
-{#        const btn = $(this);#}
-{#        btn.prop('disabled', true).text('در حال تولید...');#}
-{##}
-{#        $.post("{% url 'build_schedule' %}", {#}
-{#            "csrfmiddlewaretoken": "{{ csrf_token }}"#}
-{#        }, function(data){#}
-{##}
-{#            if(data.status === 'success'){#}
-{#                location.reload();#}
-{#            } else {#}
-{#                alert(data.errors ? data.errors.join("\n") : "خطا در تولید برنامه!");#}
-{#                btn.prop('disabled', false).text('🛠 تولید برنامه مدرسه');#}
-{#            }#}
-{##}
-{#        }).fail(function(xhr){#}
-{#            alert("خطای سرور:\n" + xhr.responseJSON.errors.join("\n"));#}
-{#            btn.prop('disabled', false).text('🛠 تولید برنامه مدرسه');#}
-{#        });#}
-{#    });#}
-{#</script>#}
-
 </body>
 </html>

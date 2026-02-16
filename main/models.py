@@ -38,17 +38,19 @@ class Lesson(models.Model):
 class Teacher(models.Model):
     name = models.CharField(max_length=100)
     weekly_capacity = models.IntegerField()  # حداکثر ساعت تدریس در هفته
-
+    lessons = models.ManyToManyField(Lesson)
     def __str__(self):
         return self.name
 class TeacherAvailability(models.Model):
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, db_index=True)
-    day_periods = models.ManyToManyField(DayPeriod, blank=True)
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    day = models.ForeignKey(SchoolDay, on_delete=models.CASCADE)
+    available_hours = models.IntegerField()  # چند ساعت در آن روز در اختیار است
+
+    class Meta:
+        unique_together = ('teacher', 'day')
 
     def __str__(self):
-        # نمایش خلاصه‌ای از همه روزها و زنگ‌ها
-        periods = ", ".join([str(dp) for dp in self.day_periods.all()])
-        return f"{self.teacher.name}: {periods}"
+        return f"{self.teacher.name} - {self.day.name} ({self.available_hours} ساعت)"
 
 class TeachingAssignment(models.Model):
     teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
