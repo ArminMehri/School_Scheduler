@@ -1,8 +1,8 @@
 School Timetable Scheduler
 
 Automated timetable generator for schools with teacher availability, lesson priorities, and weekly hours. Generates conflict-free schedules and provides detailed logs.
-
-Features
+--------------------------------------------------------------------------------------
+Features:
 
 Automatically generates class schedules
 
@@ -16,31 +16,42 @@ Interactive web interface for viewing, printing, and clearing logs
 
 Supports right-to-left languages (Persian)
 
-Installation
-git clone https://github.com/ArminMehri/School_Scheduler.git
-cd REPOSITORY
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate     # Windows
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver
+Export Timetable Schedule To Excel 
 
-Usage
+You can Check the logs (The Errors in the logs page)
+--------------------------------------------------------------------------------------
+Installation:
+
+git clone https://github.com/ArminMehri/School_Scheduler.git
+
+cd REPOSITORY
+
+python -m venv venv
+
+source venv/bin/activate  # Linux/macOS
+
+venv\Scripts\activate     # Windows
+
+pip install -r requirements.txt
+
+python manage.py migrate
+
+python manage.py runserver
+--------------------------------------------------------------------------------------
+Usage:
 
 Go to Admin panel
 
-Add Teachers, Classes, Lessons, and Availability
+Add Teachers(All of requireds is Here), Classes, Lessons, Grades,Day periods,School days
 
 Click Build Schedule to generate
+
+View Timetable in main page 
 
 View logs in Schedule Logs page
 
 Print or clear logs as needed
-
-Contributing
-
-Feel free to open issues or submit pull requests.
+--------------------------------------------------------------------------------------
 
 License
 
