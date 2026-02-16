@@ -17,7 +17,7 @@ Interactive web interface for viewing, printing, and clearing logs
 Supports right-to-left languages (Persian)
 
 Installation
-git clone https://github.com/USERNAME/REPOSITORY.git
+git clone https://github.com/ArminMehri/School_Scheduler.git
 cd REPOSITORY
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
