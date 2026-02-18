@@ -18,32 +18,36 @@ from openpyxl.styles import Alignment, Font
 from django.http import HttpResponse
 from .models import SchoolClass, SchoolDay, Schedule
 
+import openpyxl
+from openpyxl.styles import Alignment, Font
+from django.http import HttpResponse
+from main.models import SchoolClass, SchoolDay, Schedule
+
 def export_schedule_excel(request):
     # ایجاد Workbook و Sheet
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "برنامه کلاسی"
 
-    # راست چین کردن همه سلول‌ها
+    # تنظیم راست‌چین و فونت B Titr
     align_right = Alignment(horizontal='right', vertical='center', wrap_text=True)
-
-    # فونت بولد برای عنوان‌ها
-    bold_font = Font(bold=True)
+    b_titr_font = Font(name='B Titr')
 
     # گرفتن کلاس‌ها و روزها
     classes = SchoolClass.objects.select_related('grade').all()
     days = SchoolDay.objects.filter(is_active=True).prefetch_related('dayperiod_set')
 
-    # محاسبه تعداد کل ستون‌ها
-    total_periods = sum(day.dayperiod_set.count() for day in days)
-
     # ردیف اول: روزهای هفته
+    ws.merge_cells(start_row=1, start_column=1, end_row=2, end_column=1)
+    cell = ws.cell(row=1, column=1, value="نام کلاس")
+    cell.alignment = align_right
+    cell.font = Font(name='B Titr')
     col_index = 2  # ستون اول برای اسم کلاس
     for day in days:
         periods_count = day.dayperiod_set.count()
         cell = ws.cell(row=1, column=col_index, value=day.name)
         cell.alignment = align_right
-        cell.font = bold_font
+        cell.font = b_titr_font
 
         if periods_count > 1:
             ws.merge_cells(
@@ -59,13 +63,15 @@ def export_schedule_excel(request):
         for period in day.dayperiod_set.all():
             cell = ws.cell(row=2, column=col_index, value=f"زنگ {period.period_number}")
             cell.alignment = align_right
-            cell.font = bold_font
+            cell.font = b_titr_font
             col_index += 1
 
     # ستون اول: اسم کلاس‌ها
     row_index = 3
     for school_class in classes:
-        ws.cell(row=row_index, column=1, value=school_class.name).alignment = align_right
+        cell_class = ws.cell(row=row_index, column=1, value=school_class.name)
+        cell_class.alignment = align_right
+        cell_class.font = b_titr_font
 
         col_index = 2
         for day in days:
@@ -74,23 +80,27 @@ def export_schedule_excel(request):
                     school_class=school_class,
                     day_period=period
                 ).first()
+
                 if sched:
-                    text = f"{sched.lesson.name}\n{sched.teacher.name}"
+                    if sched.teacher:
+                        text = f"{sched.lesson.name}\n{sched.teacher.name}"
+                    else:
+                        text = f"{sched.lesson.name}\nبدون معلم"
                 else:
                     text = "---"
 
                 cell = ws.cell(row=row_index, column=col_index, value=text)
                 cell.alignment = align_right
+                cell.font = b_titr_font
                 col_index += 1
 
         row_index += 1
 
-    # Auto width تقریبی برای ستون‌ها
+    # تنظیم عرض ستون‌ها (Auto width تقریبی)
     for col_cells in ws.columns:
         max_length = 0
         column_letter = None
         for cell in col_cells:
-            # فقط سلول‌های واقعی (نه MergedCell) را در نظر بگیر
             if hasattr(cell, "column_letter") and cell.value:
                 max_length = max(max_length, len(str(cell.value)))
                 if column_letter is None:
@@ -105,6 +115,7 @@ def export_schedule_excel(request):
     response['Content-Disposition'] = 'attachment; filename=barname_kelasi.xlsx'
     wb.save(response)
     return response
+
 
 def export_schedule_word(request):
     document = Document()

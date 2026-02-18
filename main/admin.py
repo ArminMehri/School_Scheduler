@@ -18,7 +18,6 @@ from .models import (
     Schedule,
 )
 
-
 # ============================================================
 # Teacher + Availability (Inline)
 # ============================================================
@@ -34,6 +33,7 @@ class TeacherAdmin(admin.ModelAdmin):
     list_display = ('name', 'weekly_capacity', 'limit_to_grades')
     search_fields = ('name',)
     filter_horizontal = ('lessons', 'grades')
+    inlines = [TeacherAvailabilityInline]
 
 
 # ============================================================
@@ -52,12 +52,38 @@ class SchoolClassAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ('name', 'priority','weekly_hours')
+    list_display = ('name', 'priority', 'weekly_hours', 'for_all_grades')
     search_fields = ('name',)
+    filter_horizontal = ('grades', 'paired_lessons')
 
 
 # ============================================================
-# TeachingAssignment
+# TeachingAssignmentItem (صفحه مستقل با فیلتر)
+# ============================================================
+
+@admin.register(TeachingAssignmentItem)
+class TeachingAssignmentItemAdmin(admin.ModelAdmin):
+    list_display = (
+        "school_class",
+        "lesson",
+        "weekly_hours",
+        "assignment",
+    )
+    list_filter = ("school_class", "lesson")
+    search_fields = (
+        "school_class__name",
+        "lesson__name",
+        "assignment__teacher__name",  # برای autocomplete امن
+    )
+    autocomplete_fields = (
+        "school_class",
+        "lesson",
+        "assignment",
+    )
+
+
+# ============================================================
+# TeachingAssignment Inline
 # ============================================================
 
 class TeachingAssignmentItemInline(admin.TabularInline):
@@ -66,40 +92,35 @@ class TeachingAssignmentItemInline(admin.TabularInline):
     autocomplete_fields = ('school_class', 'lesson')
 
 
+# ============================================================
+# TeachingAssignment
+# ============================================================
+
 @admin.register(TeachingAssignment)
 class TeachingAssignmentAdmin(admin.ModelAdmin):
-    list_display = ('teacher',)
-    autocomplete_fields = ('teacher',)
+    list_display = ('teacher', 'assigned_classes_info')
+    search_fields = ('teacher__name',)
     inlines = [TeachingAssignmentItemInline]
 
-    # دکمه Auto Assign
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                'auto-assign/',
-                self.admin_site.admin_view(self.auto_assign_view),
-                name='auto-assign',
-            ),
-        ]
-        return custom_urls + urls
+    def assigned_classes_info(self, obj):
+        """
+        نمایش لیست کلاس‌ها و درس‌های هر کلاس به همراه ساعت درسی
+        """
+        assignments = TeachingAssignmentItem.objects.filter(assignment=obj)
+        class_dict = {}
+        for item in assignments:
+            cls_name = item.school_class.name
+            if cls_name not in class_dict:
+                class_dict[cls_name] = []
+            class_dict[cls_name].append(f"{item.lesson.name} ({item.weekly_hours} زنگ)")
 
-    def auto_assign_view(self, request):
-        try:
-            auto_assign_teachers()
-            self.message_user(
-                request,
-                "تخصیص خودکار معلم‌ها با موفقیت انجام شد.",
-                level=messages.SUCCESS,
-            )
-        except Exception as e:
-            self.message_user(
-                request,
-                f"خطا در تخصیص خودکار: {e}",
-                level=messages.ERROR,
-            )
+        html = ""
+        for cls, lessons in class_dict.items():
+            html += f"<b>{cls}:</b> " + ", ".join(lessons) + "<br>"
 
-        return redirect('admin:main_teachingassignment_changelist')
+        return format_html(html)
+
+    assigned_classes_info.short_description = "کلاس‌ها و درس‌ها"
 
 
 # ============================================================
@@ -121,6 +142,7 @@ class ScheduleAdmin(admin.ModelAdmin):
         )
 
     colored_teacher.short_description = "دبیر"
+
     # دکمه Generate Schedule
     def get_urls(self):
         urls = super().get_urls()
@@ -134,14 +156,14 @@ class ScheduleAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def build_schedule_view(self, request):
-        from .models import TeachingAssignmentItem
-
         try:
             # اگر هیچ assignment وجود نداشت → اول auto assign
             if not TeachingAssignmentItem.objects.exists():
                 auto_assign_teachers()
 
-            generate_schedule()
+            logs = generate_schedule()  # 🔹 گرفتن لاگ‌ها
+            for log in logs:
+                self.message_user(request, log, level=messages.WARNING)
 
             self.message_user(
                 request,

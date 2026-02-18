@@ -29,24 +29,22 @@ class DayPeriod(models.Model):
 
     def __str__(self):
         return f"{self.day.name} - زنگ {self.period_number}"
+
+
 class Lesson(models.Model):
     name = models.CharField(max_length=100)
     priority = models.IntegerField(default=1)
-
-    weekly_hours = models.IntegerField(
-        default=2,
-        verbose_name="ساعت در هفته"
-    )
-
-    for_all_grades = models.BooleanField(
-        default=False,
-        verbose_name="برای همه پایه‌ها"
-    )
-
-    grades = models.ManyToManyField(
-        "Grade",
+    weekly_hours = models.IntegerField(default=2, verbose_name="ساعت در هفته")
+    for_all_grades = models.BooleanField(default=False, verbose_name="برای همه پایه‌ها")
+    grades = models.ManyToManyField("Grade", blank=True, verbose_name="پایه‌های مرتبط")
+    # برای تعیین اینکه درس تک زنگ نباید از هم جدا شود
+    allow_split = models.BooleanField(default=False)
+    # 🔹 اضافه شدن فیلد جفت شدن با درس‌های دیگر
+    paired_lessons = models.ManyToManyField(
+        "self",
         blank=True,
-        verbose_name="پایه‌های مرتبط"
+        symmetrical=False,
+        verbose_name="درس‌های پیشنهادی برای جفت شدن"
     )
 
     def __str__(self):

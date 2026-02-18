@@ -75,7 +75,7 @@
 
         table.schedule-table {
             border-collapse: collapse;
-            min-width: 1200px; /* جلوگیری از فشرده شدن */
+            min-width: 1200px;
         }
 
         table.schedule-table th,
@@ -84,7 +84,7 @@
             text-align: center;
             vertical-align: middle;
             padding: 6px;
-            min-width: 110px; /* عرض ثابت هر خانه */
+            min-width: 110px;
             height: 70px;
         }
 
@@ -175,9 +175,15 @@
                                             <span class="lesson-name">
                                                 {{ sched.lesson.name }}
                                             </span>
-                                            <span class="teacher-name">
-                                                {{ sched.teacher.name }}
+                                            {% if sched.teacher %}
+                                                <span class="teacher-name">
+                                                    {{ sched.teacher.name }}
+                                                </span>
+                                            {% else %}
+                                                <span class="teacher-name">
+                                            بدون معلم
                                             </span>
+                                            {% endif %}
                                         {% else %}
                                             ---
                                         {% endif %}

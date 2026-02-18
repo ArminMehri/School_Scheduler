@@ -5,191 +5,167 @@ from main.models import (
     Schedule,
     DayPeriod,
     TeacherAvailability,
+    SchoolClass,
 )
 
 
-# =========================================
-# تابع اصلی تولید برنامه
-# =========================================
-from django.db import transaction
-import random
-from django.shortcuts import render
-from main.models import TeachingAssignmentItem, Schedule, DayPeriod, TeacherAvailability
+# =====================================================
+# تابع اصلی با لاگ دقیق و جمع‌بندی
+# =====================================================
+def generate_schedule(max_attempts=50):
+    logs = []
 
-def generate_schedule(max_attempts=5):
-    logs = []  # لیست لاگ‌ها
+    all_slots = list(
+        DayPeriod.objects.filter(day__is_active=True)
+        .select_related("day")
+        .order_by("day__id", "period_number")
+    )
 
+    if not all_slots:
+        logs.append("[ERROR] هیچ زنگ فعالی تعریف نشده است.")
+        return logs
+
+    items = list(
+        TeachingAssignmentItem.objects.select_related(
+            "lesson", "school_class", "assignment__teacher"
+        )
+    )
+
+    # بررسی تراز بودن ساعات هر کلاس و لاگ
+    for school_class in SchoolClass.objects.all():
+        total_slots = len(all_slots)
+        total_hours = sum(
+            i.weekly_hours for i in items if i.school_class == school_class
+        )
+        logs.append(f"[INFO] کلاس {school_class.name} - جمع ساعات: {total_hours}, تعداد زنگ‌ها: {total_slots}")
+
+    # ساخت بلاک‌ها (۲تایی و تک‌زنگ)
+    blocks = []
+    for item in items:
+        total = item.weekly_hours
+        pair_count = total // 2
+        single_count = total % 2
+
+        for _ in range(pair_count):
+            blocks.append({
+                "item": item,
+                "size": 2,
+                "single": False
+            })
+        if single_count:
+            blocks.append({
+                "item": item,
+                "size": 1,
+                "single": True
+            })
+
+    # تلاش برای جایگذاری بلاک‌ها
     for attempt in range(max_attempts):
-        try:
-            with transaction.atomic():
+        temp = []
+        random.shuffle(blocks)
+        success = True
+        logs.append(f"\n[ATTEMPT {attempt+1}] شروع تلاش برای جایگذاری بلاک‌ها")
 
-                Schedule.objects.all().delete()
+        for block in blocks:
+            item = block["item"]
+            size = block["size"]
+            is_single = block["single"]
 
-                all_slots = list(
-                    DayPeriod.objects.filter(day__is_active=True)
-                    .select_related('day')
-                )
+            placed = False
 
-                items = list(
-                    TeachingAssignmentItem.objects.select_related(
-                        'lesson', 'school_class', 'assignment__teacher'
-                    ).order_by('-lesson__priority', '-weekly_hours')
-                )
+            for i in range(len(all_slots) - size + 1):
+                candidate = all_slots[i:i + size]
 
-                random.shuffle(items)
+                # بلاک دو تایی باید پشت سر هم باشد
+                if size == 2 and candidate[1].period_number != candidate[0].period_number + 1:
+                    continue
 
-                units = []
-                for item in items:
-                    for _ in range(item.weekly_hours):
-                        units.append(item)
+                # کلاس آزاد باشد
+                if any(s[0] == item.school_class and s[1] in candidate for s in temp):
+                    continue
 
-                random.shuffle(units)
-
-                for unit in units:
-
-                    best_slot = choose_best_slot(unit, all_slots)
-
-                    if not best_slot:
-                        # ذخیره لاگ بجای raise
-                        logs.append(
-                            f"⚠️ امکان چیدن درس {unit.lesson.name} برای کلاس {unit.school_class.name} وجود ندارد."
-                        )
+                # جلوگیری از افتادن ۴ ساعته‌ها در دو روز متوالی
+                if item.weekly_hours >= 4:
+                    previous_day = candidate[0].day.id - 1
+                    if any(s[0] == item.school_class and s[2] == item.lesson and s[1].day.id == previous_day for s in temp):
                         continue
 
-                    Schedule.objects.create(
-                        school_class=unit.school_class,
-                        day_period=best_slot,
-                        lesson=unit.lesson,
-                        teacher=unit.assignment.teacher
-                    )
+                # تک‌زنگ با paired درس چک شود
+                if is_single:
+                    paired = item.lesson.paired_lessons.all()
+                    if paired.exists():
+                        neighbor_ok = any(
+                            s[0] == item.school_class
+                            and s[2] in paired
+                            and s[1].day == candidate[0].day
+                            and abs(s[1].period_number - candidate[0].period_number) == 1
+                            for s in temp
+                        )
+                        if not neighbor_ok:
+                            continue
+                    else:
+                        if not item.lesson.allow_split:
+                            continue
 
-                return logs  # برگشت لیست لاگ‌ها
+                # بررسی تداخل معلم
+                teacher = item.assignment.teacher
+                teacher_available = True
+                if teacher:
+                    for slot in candidate:
+                        if any(s[3] == teacher and s[1] == slot for s in temp):
+                            teacher_available = False
+                            break
 
-        except Exception as e:
-            logs.append(f"خطای جدی: {e}")
-            continue
+                # ثبت بلاک
+                for slot in candidate:
+                    assigned_teacher = None
+                    if teacher and teacher_available:
+                        availability = TeacherAvailability.objects.filter(
+                            teacher=teacher, day=slot.day
+                        ).first()
+                        if availability:
+                            used_hours = sum(
+                                1 for s in temp if s[3] == teacher and s[1].day == slot.day
+                            )
+                            if used_hours < availability.available_hours:
+                                assigned_teacher = teacher
+
+                    temp.append((item.school_class, slot, item.lesson, assigned_teacher))
+                    logs.append(f"[INFO] کلاس {item.school_class.name} - درس {item.lesson.name} ({'تک زنگ' if is_single else 'دو زنگ'}) در زنگ {slot.period_number} روز {slot.day.name} با معلم {assigned_teacher.name if assigned_teacher else 'None'} گذاشته شد.")
+
+                placed = True
+                break
+
+            if not placed:
+                success = False
+                logs.append(f"[WARN] نتوانستیم درس {item.lesson.name} کلاس {item.school_class.name} جایگذاری کنیم!")
+
+        # ذخیره جدول
+        with transaction.atomic():
+            Schedule.objects.all().delete()
+            for school_class, slot, lesson, teacher in temp:
+                Schedule.objects.create(
+                    school_class=school_class,
+                    day_period=slot,
+                    lesson=lesson,
+                    teacher=teacher
+                )
+
+        if success:
+            logs.append("[SUCCESS] جدول برنامه با موفقیت ساخته شد.")
+        else:
+            logs.append("[INFO] تلاش انجام شد ولی بعضی درس‌ها یا معلم‌ها جایگذاری نشدند.")
+
+        break  # حتی اگر کامل نشد، جدول ذخیره شود و لاگ داده شود
+
+    # جمع‌بندی نهایی
+    logs.append("\n[SUMMARY] جمع‌بندی آخر:")
+    for school_class in SchoolClass.objects.all():
+        scheduled_items = Schedule.objects.filter(school_class=school_class)
+        total_slots = len(all_slots)
+        scheduled_hours = scheduled_items.count()
+        missing_hours = total_slots - scheduled_hours
+        without_teacher = scheduled_items.filter(teacher=None).count()
+        logs.append(f"[SUMMARY] کلاس {school_class.name}: {scheduled_hours}/{total_slots} زنگ پر شده، {without_teacher} درس بدون معلم، {missing_hours} زنگ خالی باقی مانده.")
 
     return logs
-
-
-# =========================================
-# انتخاب بهترین اسلات
-# =========================================
-def choose_best_slot(unit, all_slots):
-    scored_slots = []
-
-    for slot in all_slots:
-        if is_valid_slot(unit, slot):
-            score = calculate_slot_score(unit, slot)
-            scored_slots.append((score, slot))
-
-    if not scored_slots:
-        return None
-
-    scored_slots.sort(reverse=True, key=lambda x: x[0])
-    return scored_slots[0][1]
-
-
-# =========================================
-# بررسی معتبر بودن یک اسلات
-# =========================================
-def is_valid_slot(unit, slot):
-
-    # کلاس آزاد باشد
-    if Schedule.objects.filter(
-        school_class=unit.school_class,
-        day_period=slot
-    ).exists():
-        return False
-
-    teacher = unit.assignment.teacher
-
-    # اگر معلم ندارد (حالت بدون دبیر)
-    if not teacher:
-        return True
-
-    # معلم آزاد باشد
-    if Schedule.objects.filter(
-        teacher=teacher,
-        day_period=slot
-    ).exists():
-        return False
-
-    # حضور معلم در آن روز
-    availability = TeacherAvailability.objects.filter(
-        teacher=teacher,
-        day=slot.day
-    ).first()
-
-    if not availability:
-        return False
-
-    used_hours = Schedule.objects.filter(
-        teacher=teacher,
-        day_period__day=slot.day
-    ).count()
-
-    if used_hours >= availability.available_hours:
-        return False
-
-    # یک درس دوبار در یک روز تکرار نشود
-    if Schedule.objects.filter(
-        school_class=unit.school_class,
-        lesson=unit.lesson,
-        day_period__day=slot.day
-    ).exists():
-        return False
-
-    return True
-
-
-# =========================================
-# امتیازدهی اسلات‌ها
-# =========================================
-def calculate_slot_score(unit, slot):
-    score = 0
-
-    score += unit.lesson.priority * 20
-    score += max(0, 8 - slot.period_number)
-
-    previous_same_lesson = Schedule.objects.filter(
-        school_class=unit.school_class,
-        lesson=unit.lesson,
-        day_period__day=slot.day,
-        day_period__period_number=slot.period_number - 1
-    ).exists()
-
-    two_before_same_lesson = Schedule.objects.filter(
-        school_class=unit.school_class,
-        lesson=unit.lesson,
-        day_period__day=slot.day,
-        day_period__period_number=slot.period_number - 2
-    ).exists()
-
-    if previous_same_lesson and not two_before_same_lesson:
-        score += 6
-
-    if previous_same_lesson and two_before_same_lesson:
-        score -= 8
-
-    teacher = unit.assignment.teacher
-
-    if teacher:
-        teacher_before = Schedule.objects.filter(
-            teacher=teacher,
-            day_period__day=slot.day,
-            day_period__period_number=slot.period_number - 1
-        ).exists()
-
-        teacher_after = Schedule.objects.filter(
-            teacher=teacher,
-            day_period__day=slot.day,
-            day_period__period_number=slot.period_number + 1
-        ).exists()
-
-        if teacher_before or teacher_after:
-            score += 10
-        else:
-            score -= 3
-
-    return score
