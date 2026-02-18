@@ -3,6 +3,7 @@ from django.urls import path
 from django.shortcuts import redirect
 from django.utils.html import format_html
 from .solver_engine import generate_schedule_with_ortools
+
 from .services.auto_assign import auto_assign_teachers
 
 from .models import (
@@ -52,7 +53,7 @@ class SchoolClassAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ('name', 'priority', 'weekly_hours', 'for_all_grades')
+    list_display = ('name', 'weekly_hours', 'for_all_grades', 'allow_without_teacher')
     search_fields = ('name',)
     filter_horizontal = ('grades', 'paired_lessons')
 
@@ -160,7 +161,13 @@ class ScheduleAdmin(admin.ModelAdmin):
             if not TeachingAssignmentItem.objects.exists():
                 auto_assign_teachers()
 
-            generate_schedule_with_ortools()
+            logs = generate_schedule_with_ortools(max_time_seconds=60)
+
+            if not isinstance(logs, (list, tuple)):
+                logs = [str(logs)]
+
+            for log in logs[:25]:
+                self.message_user(request, log, level=messages.WARNING)
 
             self.message_user(
                 request,

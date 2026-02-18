@@ -4,23 +4,23 @@ from django.views.decorators.http import require_POST
 from main.models import Schedule
 from main.services.validator import run_full_validation
 from main.models import *
-from django.http import HttpResponse
 from docx import Document
 from docx.shared import Pt
 from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from .solver_engine import generate_schedule_with_ortools
-from .models import SchoolClass, Schedule
 import openpyxl
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Alignment, Font, PatternFill
+import openpyxl
 from django.http import HttpResponse
-from .models import SchoolClass, SchoolDay, Schedule
+
 
 import openpyxl
-from openpyxl.styles import Alignment, Font
+from openpyxl.styles import Alignment, Font, PatternFill
 from django.http import HttpResponse
 from main.models import SchoolClass, SchoolDay, Schedule
+
 
 def export_schedule_excel(request):
     # ایجاد Workbook و Sheet
@@ -32,6 +32,10 @@ def export_schedule_excel(request):
     align_right = Alignment(horizontal='right', vertical='center', wrap_text=True)
     b_titr_font = Font(name='B Titr')
 
+    # ✅ استایل قرمز برای سلول‌های بدون معلم
+    red_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
+    white_bold_font = Font(name='B Titr', color="FFFFFF", bold=True)
+
     # گرفتن کلاس‌ها و روزها
     classes = SchoolClass.objects.select_related('grade').all()
     days = SchoolDay.objects.filter(is_active=True).prefetch_related('dayperiod_set')
@@ -41,6 +45,7 @@ def export_schedule_excel(request):
     cell = ws.cell(row=1, column=1, value="نام کلاس")
     cell.alignment = align_right
     cell.font = Font(name='B Titr')
+
     col_index = 2  # ستون اول برای اسم کلاس
     for day in days:
         periods_count = day.dayperiod_set.count()
@@ -80,17 +85,21 @@ def export_schedule_excel(request):
                     day_period=period
                 ).first()
 
+                cell = ws.cell(row=row_index, column=col_index)
+
                 if sched:
                     if sched.teacher:
-                        text = f"{sched.lesson.name}\n{sched.teacher.name}"
+                        cell.value = f"{sched.lesson.name}\n{sched.teacher.name}"
+                        cell.font = b_titr_font
                     else:
-                        text = f"{sched.lesson.name}\nبدون معلم"
+                        cell.value = f"{sched.lesson.name}\nبدون معلم"
+                        cell.fill = red_fill
+                        cell.font = white_bold_font
                 else:
-                    text = "---"
+                    cell.value = "---"
+                    cell.font = b_titr_font
 
-                cell = ws.cell(row=row_index, column=col_index, value=text)
                 cell.alignment = align_right
-                cell.font = b_titr_font
                 col_index += 1
 
         row_index += 1

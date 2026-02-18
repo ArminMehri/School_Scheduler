@@ -46,7 +46,10 @@ class Lesson(models.Model):
         symmetrical=False,
         verbose_name="درس‌های پیشنهادی برای جفت شدن"
     )
-
+    allow_without_teacher = models.BooleanField(
+        default=False,
+        verbose_name="میتواند بدون معلم باشد"
+    )
     def __str__(self):
         return self.name
 class Teacher(models.Model):
