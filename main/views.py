@@ -3,7 +3,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from main.models import Schedule
 from main.services.validator import run_full_validation
-from main.services.scheduler import generate_schedule
 from main.models import *
 from django.http import HttpResponse
 from docx import Document
@@ -11,7 +10,7 @@ from docx.shared import Pt
 from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
-from main.services.scheduler import generate_schedule
+from .solver_engine import generate_schedule_with_ortools
 from .models import SchoolClass, Schedule
 import openpyxl
 from openpyxl.styles import Alignment, Font
@@ -241,7 +240,7 @@ def build_schedule(request):
         }, status=400)
 
     try:
-        generate_schedule()
+        generate_schedule_with_ortools()
     except Exception as e:
         return JsonResponse({
             "status": "error",
@@ -260,7 +259,8 @@ def schedule_build_view(request):
         return redirect('schedule-build')
 
     if request.method == "POST" and "generate_schedule" in request.POST:
-        logs = generate_schedule(max_attempts=1)
+        generate_schedule_with_ortools()
+        request.session['schedule_logs'] = ["برنامه با موتور حرفه‌ای ساخته شد."]
         request.session['schedule_logs'] = logs
         return redirect('schedule-build')
 

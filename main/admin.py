@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.urls import path
 from django.shortcuts import redirect
 from django.utils.html import format_html
-from .services.scheduler import generate_schedule
+from .solver_engine import generate_schedule_with_ortools
 from .services.auto_assign import auto_assign_teachers
 
 from .models import (
@@ -157,17 +157,14 @@ class ScheduleAdmin(admin.ModelAdmin):
 
     def build_schedule_view(self, request):
         try:
-            # اگر هیچ assignment وجود نداشت → اول auto assign
             if not TeachingAssignmentItem.objects.exists():
                 auto_assign_teachers()
 
-            logs = generate_schedule()  # 🔹 گرفتن لاگ‌ها
-            for log in logs:
-                self.message_user(request, log, level=messages.WARNING)
+            generate_schedule_with_ortools()
 
             self.message_user(
                 request,
-                "برنامه درسی با موفقیت تولید شد.",
+                "برنامه درسی با موتور حرفه‌ای تولید شد.",
                 level=messages.SUCCESS,
             )
 
