@@ -138,10 +138,14 @@
         <div>
             <a href="{% url 'admin:index' %}" class="gradient-btn">پنل ادمین</a>
             <a href="{% url 'schedule-build' %}" class="gradient-btn">لاگ ارور ها</a>
-            <a href="{% url 'export_excel' %}" class="gradient-btn">📥 خروجی Excel</a>
+            <a href="{% url 'export_excel' %}" class="gradient-btn"> 📥 خروجی Excel (کلاس محور)</a>
             <a href="{% url 'export_excel_teacher' %}" class="gradient-btn">
-                📥 خروجی Excel دبیرمحور
+                📥 خروجی Excel (دبیرمحور)
             </a>
+            <a href="{% url 'export_pdf' %}" class="gradient-btn">
+              🧾 خروجی PDF (کلاس‌محور)
+            </a>
+
         </div>
     </div>
 

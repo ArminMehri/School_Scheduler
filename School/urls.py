@@ -23,5 +23,7 @@ urlpatterns = [
     path('build-schedule/', views.build_schedule, name='build_schedule'),
     path('export-excel/', views.export_schedule_excel, name='export_excel'),
     path("export-excel-teacher/", views.export_schedule_excel_teacher, name="export_excel_teacher"),
+    path("export-pdf/", views.export_schedule_pdf, name="export_pdf"),
+
     path('Logs/', views.schedule_build_view, name='schedule-build'),
 ]

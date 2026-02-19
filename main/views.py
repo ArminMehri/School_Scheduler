@@ -16,6 +16,149 @@ from openpyxl.styles import Alignment, Font, PatternFill,Border,Side
 from django.http import HttpResponse
 from main.models import SchoolClass, SchoolDay, Schedule
 from openpyxl.worksheet.page import PageMargins
+from main.services.pdf_export import *
+import arabic_reshaper
+from bidi.algorithm import get_display
+from django.http import HttpResponse
+from django.conf import settings
+from django.utils import timezone
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from django.contrib.staticfiles import finders
+import os
+from .models import SchoolClass, SchoolDay, Schedule
+
+
+def fa(text: str) -> str:
+    if text is None:
+        text = ""
+    reshaped = arabic_reshaper.reshape(str(text))
+    return get_display(reshaped)
+
+
+def export_schedule_pdf(request):
+    # ✅ پیدا کردن فونت از static
+    vazir_path = finders.find("fonts/Vazir.ttf")
+    vazir_bold_path = finders.find("fonts/Vazir-Bold.ttf")
+
+    if not vazir_path or not vazir_bold_path:
+        raise Exception("فونت Vazir داخل static پیدا نشد. مسیر درست: main/static/fonts/")
+
+    pdfmetrics.registerFont(TTFont("Vazir", vazir_path))
+    pdfmetrics.registerFont(TTFont("VazirBold", vazir_bold_path))
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="barname_kelasi.pdf"'
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=landscape(A4),
+        leftMargin=18,
+        rightMargin=18,
+        topMargin=18,
+        bottomMargin=18,
+    )
+
+    styles = getSampleStyleSheet()
+    base = ParagraphStyle(
+        "base",
+        parent=styles["Normal"],
+        fontName="Vazir",
+        fontSize=9,
+        leading=11,
+        alignment=2,
+    )
+    title_style = ParagraphStyle(
+        "title",
+        parent=styles["Title"],
+        fontName="VazirBold",
+        fontSize=14,
+        alignment=2,
+    )
+
+    classes = SchoolClass.objects.select_related("grade").all()
+    days = SchoolDay.objects.filter(is_active=True).prefetch_related("dayperiod_set")
+
+    story = []
+    story.append(Paragraph(fa("برنامه کلاسی مدرسه"), title_style))
+    story.append(Spacer(1, 8))
+
+    for idx, school_class in enumerate(classes):
+        story.append(Paragraph(
+            fa(f"کلاس {school_class.name} - پایه {school_class.grade.name}"),
+            ParagraphStyle("cls", parent=base, fontName="VazirBold", fontSize=11)
+        ))
+        story.append(Spacer(1, 6))
+
+        header_row1 = [fa("کلاس")]
+        header_row2 = [""]
+
+        day_periods = []
+        total_cols = 1
+        for day in days:
+            periods = list(day.dayperiod_set.all())
+            day_periods.append((day, periods))
+            total_cols += len(periods)
+            header_row1 += [fa(day.name)] + [""] * (len(periods) - 1)
+            header_row2 += [fa(f"زنگ {p.period_number}") for p in periods]
+
+        row = [fa(school_class.name)]
+        for day, periods in day_periods:
+            for period in periods:
+                sched = Schedule.objects.filter(
+                    school_class=school_class,
+                    day_period=period
+                ).select_related("lesson", "teacher").first()
+
+                if sched:
+                    if sched.teacher:
+                        txt = f"{sched.lesson.name}\n{sched.teacher.name}"
+                    else:
+                        txt = f"{sched.lesson.name}\nبدون معلم"
+                else:
+                    txt = "---"
+
+                row.append(fa(txt))
+
+        data = [header_row1, header_row2, row]
+
+        col_widths = [70] + [(doc.width - 70) / (total_cols - 1)] * (total_cols - 1)
+        table = Table(data, colWidths=col_widths, repeatRows=2)
+
+        ts = TableStyle([
+            ("FONTNAME", (0, 0), (-1, -1), "Vazir"),
+            ("FONTSIZE", (0, 0), (-1, -1), 9),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ("BACKGROUND", (0, 0), (-1, 1), colors.HexColor("#EDEDED")),
+            ("FONTNAME", (0, 0), (-1, 1), "VazirBold"),
+        ])
+
+        col = 1
+        for day, periods in day_periods:
+            if len(periods) > 1:
+                ts.add("SPAN", (col, 0), (col + len(periods) - 1, 0))
+            col += len(periods)
+
+        for c in range(1, total_cols):
+            if "بدون معلم" in data[2][c]:
+                ts.add("BACKGROUND", (c, 2), (c, 2), colors.red)
+                ts.add("TEXTCOLOR", (c, 2), (c, 2), colors.white)
+                ts.add("FONTNAME", (c, 2), (c, 2), "VazirBold")
+
+        table.setStyle(ts)
+        story.append(table)
+
+        if idx != len(classes) - 1:
+            story.append(PageBreak())
+
+    doc.build(story)
+    return response
 
 def export_schedule_excel(request):
     # ایجاد Workbook و Sheet
