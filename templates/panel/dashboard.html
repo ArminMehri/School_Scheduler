@@ -1,37 +1,343 @@
-{% extends "panel/base.html" %}
-{% block title %}داشبورد{% endblock %}
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>داشبورد</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-{% block content %}
-  <div class="mb-5">
-    <h1 class="text-3xl font-black">داشبورد</h1>
-    <p class="text-slate-300 mt-1">اینجا همه چیز رو سریع می‌بینی و مدیریت می‌کنی.</p>
-  </div>
+  <style>
+    :root{
+      --bg1:#050816; --bg2:#0b1a3a;
+      --card:rgba(255,255,255,.08);
+      --card2:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --blue1:#4f8bff; --blue2:#2f6bff;
+      --green1:#19d18c; --green2:#0fb57a;
+      --red1:#ff3b3b;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:22px;
+    }
 
-  <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-    {% for title, count, url in stats %}
-      <div class="glass rounded-3xl p-5">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <div class="text-slate-200 font-extrabold">{{ title }}</div>
-            <div class="text-4xl font-black mt-2">{{ count }}</div>
-          </div>
-          <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500/70 to-indigo-500/70"></div>
-        </div>
+    body{
+      margin:0;
+      font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% 10%, rgba(120,90,255,.25), transparent 55%),
+        radial-gradient(900px 500px at 20% 90%, rgba(70,170,255,.18), transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-size: 17px;
+    }
 
-        <div class="mt-4">
-          <a href="/{{ url }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/15 transition font-bold text-sm">
-            مشاهده / مدیریت
-            <span class="opacity-70">←</span>
-          </a>
+    .wrap{max-width:1200px; margin:0 auto; padding:22px 18px 32px;}
+
+    /* ---------- Topbar ---------- */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px 16px;
+      margin-bottom:16px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 180px;
+    }
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background: radial-gradient(circle at 30% 20%, rgba(120,150,255,.95), rgba(50,90,255,.55));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 12px 35px rgba(60,120,255,.22);
+    }
+    .brand .t1{font-weight:1000; line-height:1.2}
+    .brand .t2{color:var(--muted); font-size:13px; margin-top:2px}
+
+    .userbox{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-weight:800;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight:900;
+    }
+    .chip small{color:var(--muted); font-weight:900}
+
+    /* ---------- Cards ---------- */
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    h1{margin:0 0 8px; font-size:30px;}
+    .sub{color:var(--muted); margin-bottom:18px}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:14px;
+    }
+    @media (max-width:1100px){ .grid{grid-template-columns: repeat(2, minmax(0,1fr));} }
+    @media (max-width:650px){ .grid{grid-template-columns: 1fr;} }
+
+    .stat{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 18px;
+      padding: 14px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .stat .t{font-weight:1000;}
+    .stat .n{font-size:28px; font-weight:1000; opacity:.92}
+    .stat a{color:#a9c4ff; text-decoration:none; font-weight:900}
+    .stat a:hover{text-decoration:underline;}
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:18px;
+      align-items:center;
+    }
+
+    /* ---------- Buttons ---------- */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight:1000;
+      text-decoration:none;
+      transition:.18s ease;
+      font-size: 16px;
+      color:white;
+      user-select:none;
+    }
+    .btn-primary{
+      background:linear-gradient(90deg, var(--blue2), var(--blue1));
+      box-shadow:0 14px 35px rgba(60,120,255,.22);
+    }
+    .btn-primary:hover{transform:translateY(-1px); filter:brightness(1.03);}
+
+    .btn-green{
+      background:linear-gradient(90deg, var(--green2), var(--green1));
+      box-shadow:0 14px 35px rgba(20,220,140,.18);
+    }
+    .btn-green:hover{transform:translateY(-1px); filter:brightness(1.03);}
+
+    .btn-danger{
+      background: linear-gradient(90deg, #ff2f2f, #ff6a6a);
+      box-shadow:0 14px 35px rgba(255,60,60,.18);
+    }
+    .btn-danger:hover{transform:translateY(-1px); filter:brightness(1.03);}
+
+    .btn-ghost{
+      background:rgba(255,255,255,.07);
+      border-color:rgba(255,255,255,.14);
+      color:var(--text);
+    }
+    .btn-ghost:hover{background:rgba(255,255,255,.10);}
+
+    .btn-sm{padding:10px 14px; font-size:15px;}
+
+    .divider{height:1px; background:rgba(255,255,255,.12); margin:18px 0;}
+
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- ✅ Topbar -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="t1">پنل برنامه‌ساز</div>
+          <div class="t2">مدیریت اطلاعات + خروجی‌ها + ساخت برنامه</div>
         </div>
       </div>
-    {% endfor %}
+
+      <div class="userbox">
+        {% if user.is_authenticated %}
+          <span class="chip">
+            👋 خوش آمدی
+            <span>{{ user.username }}</span>
+            <small>(ID: {{ user.id }})</small>
+          </span>
+            <a class="btn btn-ghost btn-sm" href="{% url 'site_index' %}">بازگشت به صفحه اصلی</a>
+          <a class="btn btn-ghost btn-sm" href="{% url 'panel_logout' %}" data-logout>خروج</a>
+
+        {% else %}
+          <span class="chip">
+            🔒 مهمان
+            <small>برای استفاده کامل وارد شوید</small>
+          </span>
+          <a class="btn btn-primary btn-sm" href="{% url 'panel_login' %}">ورود</a>
+          <a class="btn btn-ghost btn-sm" href="{% url 'panel_register' %}">ثبت‌نام</a>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <div class="card">
+      <h1>داشبورد</h1>
+      <div class="sub">آمار سریع + مدیریت بخش‌ها</div>
+
+      <div class="grid">
+        {% for s in stats %}
+          <div class="stat">
+            <div>
+              <div class="t">{{ s.0 }}</div>
+              <a href="{% url s.2 %}">مشاهده / مدیریت</a>
+            </div>
+            <div class="n">{{ s.1 }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="actions">
+        <!-- ساخت برنامه -->
+        <form method="post" action="{% url 'panel_schedule_build' %}" style="display:inline;" data-build>
+          {% csrf_token %}
+          <button class="btn btn-green" type="submit">🧠 ساخت برنامه</button>
+        </form>
+
+        <!-- خروجی‌ها -->
+        <a class="btn btn-primary" data-export href="/export-excel/">📗 اکسل (کلاس‌محور)</a>
+        <a class="btn btn-primary" data-export href="/export-excel-teacher/">📘 اکسل (دبیرمحور)</a>
+        <a class="btn btn-primary" data-export href="/export-pdf/">🖨️ PDF</a>
+
+        <a class="btn btn-ghost" href="{% url 'schedule_list' %}">📌 رفتن به برنامه‌ها</a>
+      </div>
+
+      {% if not user.is_authenticated %}
+        <div class="sub" style="margin-top:14px;">
+          ⚠️ برای ساخت برنامه و خروجی‌ها بهتره وارد بشی.
+        </div>
+      {% endif %}
+    </div>
+
   </div>
 
-  <div class="mt-6 glass rounded-3xl p-5 bg-gradient-to-l from-fuchsia-500/25 to-blue-500/25 border-white/15">
-    <div class="text-lg font-extrabold">پیام مدیریت:</div>
-    <div class="text-slate-200 mt-1 text-sm">
-      سلام مدیر گرامی خسته نباشید.
-    </div>
-  </div>
-{% endblock %}
+<script>
+  // پیام‌های Django
+  (function(){
+    const msgs = [];
+    {% if messages %}
+      {% for message in messages %}
+        msgs.push({ level: "{{ message.tags }}", text: "{{ message|escapejs }}" });
+      {% endfor %}
+    {% endif %}
+    if (msgs.length) {
+      const m = msgs[0];
+      let icon = "info";
+      if (m.level.includes("success")) icon = "success";
+      if (m.level.includes("error")) icon = "error";
+      if (m.level.includes("warning")) icon = "warning";
+      Swal.fire({ icon, title:"پیام سیستم", text:m.text, confirmButtonText:"باشه" });
+    }
+  })();
+
+  // تایید ساخت برنامه
+  (function(){
+    const f = document.querySelector("form[data-build]");
+    if(!f) return;
+
+    f.addEventListener("submit", function(e){
+      if (f.dataset.confirmed === "1") return;
+      e.preventDefault();
+
+      Swal.fire({
+        icon: "question",
+        title: "ساخت برنامه؟",
+        text: "برنامه جدید ساخته می‌شود و جایگزین قبلی خواهد شد.",
+        showCancelButton: true,
+        confirmButtonText: "✅ بساز",
+        cancelButtonText: "لغو",
+        reverseButtons: true,
+      }).then((res)=>{
+        if(res.isConfirmed){
+          f.dataset.confirmed = "1";
+          f.submit();
+        }
+      });
+    });
+  })();
+
+  // خروج با sweetalert
+  (function(){
+    const a = document.querySelector("[data-logout]");
+    if(!a) return;
+
+    a.addEventListener("click", function(e){
+      e.preventDefault();
+      Swal.fire({
+        icon:"warning",
+        title:"خروج از حساب؟",
+        text:"مطمئنی می‌خوای خارج بشی؟",
+        showCancelButton:true,
+        confirmButtonText:"بله، خروج",
+        cancelButtonText:"لغو",
+        reverseButtons:true
+      }).then((res)=>{
+        if(res.isConfirmed){
+          window.location.href = a.getAttribute("href");
+        }
+      });
+    });
+  })();
+
+  // Toast برای خروجی‌ها
+  (function(){
+    document.querySelectorAll("a[data-export]").forEach(a=>{
+      a.addEventListener("click", function(){
+        Swal.fire({
+          toast:true,
+          position:"top-start",
+          timer:1400,
+          showConfirmButton:false,
+          icon:"success",
+          title:"در حال آماده‌سازی خروجی…"
+        });
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

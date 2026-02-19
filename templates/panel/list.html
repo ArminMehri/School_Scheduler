@@ -1,63 +1,266 @@
-{% extends "panel/base.html" %}
-{% block title %}{{ title }}{% endblock %}
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root{
+      --bg1:#050816; --bg2:#0b1a3a;
+      --card:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --blue1:#4f8bff; --blue2:#2f6bff;
+      --red1:#ff3b3b;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:22px;
+    }
+    body{
+      margin:0;
+      font-family: "Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 80% 10%, rgba(120,90,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 20% 90%, rgba(70,170,255,.18), transparent 55%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-size: 17px;
+    }
 
-{% block content %}
-  <div class="flex items-start justify-between gap-3 mb-4">
-    <div>
-      <h1 class="text-3xl font-black">{{ title }}</h1>
-      <p class="text-slate-300 text-sm mt-1">{{ subtitle }}</p>
-    </div>
+    .wrap{max-width:1200px; margin:0 auto; padding:32px 18px;}
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+    h1{margin:0 0 6px; font-size:28px;}
+    .sub{color:var(--muted); margin-bottom:16px}
 
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+    .btns{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border-radius: 999px;
+      padding: 11px 16px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight:800;
+      text-decoration:none;
+      user-select:none;
+      transition:.18s ease;
+      font-size: 15.5px;
+      color: white;
+    }
+    .btn-primary{background:linear-gradient(90deg, var(--blue2), var(--blue1)); box-shadow:0 14px 35px rgba(60,120,255,.22);}
+    .btn-primary:hover{transform:translateY(-1px); filter:brightness(1.03);}
+    .btn-danger{background:linear-gradient(90deg, #ff2e2e, #ff5a5a); box-shadow:0 14px 35px rgba(255,60,60,.18);}
+    .btn-danger:hover{transform:translateY(-1px); filter:brightness(1.03);}
+    .btn-ghost{background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.14); color:var(--text);}
+    .btn-ghost:hover{background:rgba(255,255,255,.10);}
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(7,12,30,.25);
+    }
+    th, td{
+      padding: 12px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      text-align:right;
+      vertical-align:middle;
+      font-size: 15.5px;
+    }
+    th{
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.9);
+      font-weight:900;
+    }
+    tr:last-child td{border-bottom:none;}
+
+    .action-cell{white-space:nowrap;}
+    .mini{
+      padding:8px 10px;
+      font-size:14px;
+      border-radius: 999px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>{{ title }}</h1>
+      <div class="sub">{{ subtitle }}</div>
+
+      <div class="topbar">
+  <div class="btns">
     {% if add_url_name %}
-      <a href="{% url add_url_name %}"
-         class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-400 transition font-extrabold">
-        <span class="text-xl">+</span> افزودن
-      </a>
+      <a class="btn btn-primary" href="{% url add_url_name %}">➕ افزودن</a>
     {% endif %}
-  </div>
 
-  <div class="glass rounded-3xl overflow-hidden">
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
+    {% for b in extra_buttons %}
+      {% if b.method == "post" %}
+        <form method="post"
+              action="{% url b.url_name %}"
+              style="display:inline;"
+              data-swal
+              data-title="{{ b.label }}"
+              data-text="{% if b.style == 'danger' %}این عملیات قابل برگشت نیست!{% else %}ادامه می‌دهی؟{% endif %}"
+              data-icon="{% if b.style == 'danger' %}warning{% else %}question{% endif %}"
+              data-ok="{% if b.style == 'danger' %}بله انجام بده{% else %}ادامه{% endif %}"
+              data-cancel="لغو">
+          {% csrf_token %}
+          <button class="btn {% if b.style == 'danger' %}btn-danger{% elif b.style == 'primary' %}btn-primary{% else %}btn-ghost{% endif %}" type="submit">
+            {{ b.label }}
+          </button>
+        </form>
+      {% else %}
+        <a class="btn {% if b.style == 'danger' %}btn-danger{% elif b.style == 'primary' %}btn-primary{% else %}btn-ghost{% endif %}"
+           href="{% url b.url_name %}">
+          {{ b.label }}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+        <a class="btn btn-ghost" href="{% url 'panel_dashboard' %}">🏠 داشبورد</a>
+      </div>
+
+      <table>
         <thead>
-          <tr class="bg-white/10">
+          <tr>
             {% for h in headers %}
-              <th class="text-right px-4 py-4 font-black text-slate-100 whitespace-nowrap">{{ h }}</th>
+              <th>{{ h }}</th>
             {% endfor %}
             {% if actions %}
-              <th class="text-center px-4 py-4 font-black text-slate-100 whitespace-nowrap">عملیات</th>
+              <th class="action-cell">عملیات</th>
             {% endif %}
           </tr>
         </thead>
+
         <tbody>
-          {% for row in rows %}
-            <tr class="border-t border-white/10 hover:bg-white/5 transition">
-              {% for c in row.cols %}
-                <td class="px-4 py-4 text-slate-100 whitespace-pre-line">{{ c }}</td>
+          {% for r in rows %}
+            <tr>
+              {% for c in r.cols %}
+                <td>{{ c }}</td>
               {% endfor %}
 
               {% if actions %}
-                <td class="px-4 py-4">
-                  <div class="flex items-center justify-center gap-2">
-                    {% if row.edit_url %}
-                      <a class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 transition font-bold"
-                         href="{% url row.edit_url.0 row.edit_url.1 %}">ویرایش</a>
-                    {% endif %}
-                    {% if row.delete_url %}
-                      <a class="px-3 py-2 rounded-xl bg-red-500/80 hover:bg-red-500 transition font-bold"
-                         href="{% url row.delete_url.0 row.delete_url.1 %}">حذف</a>
-                    {% endif %}
-                  </div>
+                <td class="action-cell">
+                  {% if r.edit_url %}
+                    <a class="btn btn-ghost mini" href="{% url r.edit_url.0 r.edit_url.1 %}">ویرایش</a>
+                  {% endif %}
+                  {% if r.delete_url %}
+                    <a class="btn btn-danger mini" href="{% url r.delete_url.0 r.delete_url.1 %}"
+                       onclick="return confirm('حذف بشه؟');">حذف</a>
+                  {% endif %}
                 </td>
               {% endif %}
             </tr>
           {% empty %}
-            <tr>
-              <td class="px-4 py-6 text-slate-300" colspan="99">موردی یافت نشد.</td>
-            </tr>
+            <tr><td colspan="99" style="text-align:center; color:rgba(255,255,255,.7)">چیزی برای نمایش نیست.</td></tr>
           {% endfor %}
         </tbody>
       </table>
+
     </div>
   </div>
-{% endblock %}
+<script>
+  // ✅ Django messages -> SweetAlert
+  (function(){
+    const msgs = [];
+    {% if messages %}
+      {% for message in messages %}
+        msgs.push({ level: "{{ message.tags }}", text: "{{ message|escapejs }}" });
+      {% endfor %}
+    {% endif %}
+
+    if (msgs.length) {
+      const m = msgs[0];
+      let icon = "info";
+      if (m.level.includes("success")) icon = "success";
+      if (m.level.includes("error")) icon = "error";
+      if (m.level.includes("warning")) icon = "warning";
+
+      Swal.fire({
+        icon,
+        title: "پیام سیستم",
+        text: m.text,
+        confirmButtonText: "باشه",
+      });
+    }
+  })();
+
+  // ✅ confirm buttons/forms (delete/build/clear)
+  (function(){
+    // فرم‌هایی که روشون data-swal داریم
+    document.querySelectorAll("form[data-swal]").forEach((f) => {
+      f.addEventListener("submit", function(e){
+        if (f.dataset.confirmed === "1") return;
+        e.preventDefault();
+
+        const title = f.dataset.title || "مطمئنی؟";
+        const text  = f.dataset.text  || "این عملیات قابل برگشت نیست!";
+        const icon  = f.dataset.icon  || "warning";
+        const ok    = f.dataset.ok    || "تایید";
+        const cancel= f.dataset.cancel|| "لغو";
+
+        Swal.fire({
+          icon,
+          title,
+          text,
+          showCancelButton: true,
+          confirmButtonText: ok,
+          cancelButtonText: cancel,
+          reverseButtons: true,
+        }).then((res)=>{
+          if(res.isConfirmed){
+            f.dataset.confirmed = "1";
+            f.submit();
+          }
+        });
+      });
+    });
+
+    // لینک‌های حذف (a) اگر داری
+    document.querySelectorAll("a[data-swal-link]").forEach((a)=>{
+      a.addEventListener("click", function(e){
+        e.preventDefault();
+        Swal.fire({
+          icon: "warning",
+          title: a.dataset.title || "حذف شود؟",
+          text: a.dataset.text || "این عملیات قابل برگشت نیست!",
+          showCancelButton: true,
+          confirmButtonText: a.dataset.ok || "حذف کن",
+          cancelButtonText: a.dataset.cancel || "لغو",
+          reverseButtons: true,
+        }).then((res)=>{
+          if(res.isConfirmed){
+            window.location.href = a.href;
+          }
+        });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

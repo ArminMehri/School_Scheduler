@@ -9,6 +9,7 @@
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
+
   <style>
        /* ✅ اگر جایی فیلد بدون کلاس هم داشت، باز هم دارک بشه */
   input:not([type="checkbox"]):not([type="radio"]),
@@ -63,6 +64,14 @@
       -webkit-backdrop-filter: blur(14px);
       box-shadow: 0 12px 40px rgba(0,0,0,0.25);
     }
+     body { font-size: 16px; }
+  input, select, textarea {
+    background: rgba(255,255,255,0.08) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+  }
+  option { color: #000; } /* داخل دراپ‌داون */
+  label { font-size: 15px; }
   </style>
 </head>
 
@@ -136,6 +145,26 @@
       </aside>
     </div>
   </main>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("form[data-swal]").forEach(form => {
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      Swal.fire({
+        title: form.dataset.title || "ادامه؟",
+        text: form.dataset.text || "مطمئنی؟",
+        icon: form.dataset.icon || "question",
+        showCancelButton: true,
+        confirmButtonText: form.dataset.ok || "بله",
+        cancelButtonText: form.dataset.cancel || "لغو",
+        reverseButtons: true
+      }).then(r => {
+        if (r.isConfirmed) form.submit();
+      });
+    });
+  });
+});
+</script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 from django import forms
+from django.forms import inlineformset_factory
 from main.models import (
     Grade, SchoolDay, DayPeriod,
     SchoolClass, Lesson, Teacher, TeacherAvailability,
@@ -128,3 +129,10 @@ class TeachingAssignmentItemForm(forms.ModelForm):
             "lesson": forms.Select(attrs={"class": BASE_SELECT}),
             "weekly_hours": forms.NumberInput(attrs={"class": BASE_INPUT, "min": 0}),
         }
+TeacherAvailabilityFormSet = inlineformset_factory(
+    parent_model=Teacher,
+    model=TeacherAvailability,
+    fields=("day", "available_hours"),
+    extra=1,
+    can_delete=True,
+)

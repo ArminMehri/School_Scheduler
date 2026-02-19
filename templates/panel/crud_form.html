@@ -1,49 +1,284 @@
-{% extends "panel/base.html" %}
-{% block title %}{{ title }}{% endblock %}
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title }}</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-{% block content %}
-<div class="max-w-3xl">
-  <div class="flex items-end justify-between flex-wrap gap-3 mb-5">
-    <div>
-      <div class="text-3xl font-black">{{ title }}</div>
-      <div class="text-slate-300 text-sm mt-1">{{ subtitle }}</div>
-    </div>
+  <style>
+    :root{
+      --bg1:#050816;
+      --bg2:#0b1a3a;
+      --card:rgba(255,255,255,.08);
+      --card2:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --blue1:#4f8bff;
+      --blue2:#2f6bff;
+      --red1:#ff3b3b;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:22px;
+    }
 
-    <a href="{% url cancel_url_name %}" class="px-4 py-3 rounded-2xl glass hover:bg-white/10 transition font-bold">
-      بازگشت
-    </a>
-  </div>
+    body{
+      margin:0;
+      font-family: "Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 80% 10%, rgba(120,90,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 20% 90%, rgba(70,170,255,.18), transparent 55%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-size: 17px;
+    }
 
-  <div class="glass rounded-3xl p-6">
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
+    .wrap{max-width:1100px; margin:0 auto; padding:32px 18px;}
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
 
-      {% for field in form %}
-        <div>
-          <label class="block font-extrabold mb-2 text-slate-100">{{ field.label }}</label>
+    h1{margin:0 0 6px; font-size:28px;}
+    .sub{color:var(--muted); margin-bottom:16px}
 
-          {{ field }}
+    /* ---------- Buttons ---------- */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      user-select:none;
+      transition: .18s ease;
+      font-size: 16px;
+    }
+    .btn-primary{
+      background: linear-gradient(90deg, var(--blue2), var(--blue1));
+      box-shadow: 0 14px 35px rgba(60,120,255,.25);
+      color:white;
+    }
+    .btn-primary:hover{ transform: translateY(-1px); filter:brightness(1.03); }
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.14);
+      color: var(--text);
+    }
+    .btn-ghost:hover{ background: rgba(255,255,255,.09); }
 
-          {% if field.help_text %}
-            <div class="text-slate-300 text-xs mt-1">{{ field.help_text }}</div>
-          {% endif %}
+    /* ---------- Form Fields ---------- */
+    form{margin-top: 14px;}
+    .field{margin-bottom:14px;}
+    label{
+      display:block;
+      color:var(--muted);
+      margin: 10px 0 6px;
+      font-weight:700;
+    }
 
-          {% if field.errors %}
-            <div class="text-red-300 text-sm mt-1">{{ field.errors }}</div>
-          {% endif %}
+    input, select, textarea{
+      width:100%;
+      border-radius: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(10,18,40,.55);
+      color: var(--text);
+      outline:none;
+      font-size: 16px;
+    }
+    textarea{min-height:110px;}
+
+    /* ✅ مهم: انتخاب‌های select و مخصوصاً m2m */
+    select{
+      appearance: auto;
+    }
+
+    /* برای option ها (تا سفید باشن نه مشکی) */
+    select option{
+      background: #0b1636;
+      color: rgba(255,255,255,.92);
+    }
+
+    /* ✅ رنگ آیتم‌های انتخاب‌شده در select[multiple] */
+    select[multiple] option:checked{
+      background: #2f6bff !important;
+      color: #fff !important;
+    }
+
+    /* در بعضی کروم‌ها متن option با این بهتر دیده میشه */
+    select[multiple] option:checked{
+      -webkit-text-fill-color: #fff;
+    }
+
+    /* بهتر شدن خود باکس m2m */
+    select[multiple]{
+      padding: 10px;
+      min-height: 180px;
+      border-radius: 18px;
+      background: rgba(10,18,40,.45);
+    }
+
+    /* ---------- Checkbox row (چک‌باکس کنار متن) ---------- */
+    .check-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      background: rgba(10,18,40,.35);
+      margin-top: 6px;
+      width: fit-content;
+      max-width: 100%;
+    }
+    .check-row input[type="checkbox"]{
+      width: 18px;
+      height: 18px;
+      margin:0;
+      accent-color: var(--blue2);
+      cursor:pointer;
+    }
+    .check-row .check-label{
+      color: rgba(255,255,255,.88);
+      font-weight:700;
+      margin:0;
+    }
+
+    /* ---------- Errors ---------- */
+    .errors{
+      color:#ffd1d1;
+      background: rgba(255,0,0,.10);
+      border: 1px solid rgba(255,0,0,.25);
+      padding: 10px 12px;
+      border-radius: 14px;
+      margin-top: 8px;
+      line-height: 1.8;
+    }
+    .help{
+      color: rgba(255,255,255,.55);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>{{ title }}</h1>
+      <div class="sub">{{ subtitle }}</div>
+
+      <form method="post" id="mainForm">
+        {% csrf_token %}
+
+        {# ✅ رندر سفارشی فیلدها (دیگه form.as_p نمی‌زنیم) #}
+        {% for field in form %}
+          <div class="field">
+            {% if field.field.widget.input_type == "checkbox" %}
+              <div class="check-row">
+                {{ field }}
+                <span class="check-label">{{ field.label }}</span>
+              </div>
+
+              {% if field.help_text %}
+                <div class="help">{{ field.help_text }}</div>
+              {% endif %}
+
+              {% if field.errors %}
+                <div class="errors">{{ field.errors }}</div>
+              {% endif %}
+
+            {% else %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+
+              {% if field.help_text %}
+                <div class="help">{{ field.help_text }}</div>
+              {% endif %}
+
+              {% if field.errors %}
+                <div class="errors">{{ field.errors }}</div>
+              {% endif %}
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">💾 ذخیره</button>
+          <a class="btn btn-ghost" href="{% url cancel_url_name %}">↩️ بازگشت</a>
         </div>
-      {% endfor %}
-
-      <div class="pt-2 flex items-center gap-2">
-        <button class="px-5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 transition font-extrabold" type="submit">
-          ذخیره
-        </button>
-        <a class="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 transition font-extrabold"
-           href="{% url cancel_url_name %}">
-          انصراف
-        </a>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
-</div>
-{% endblock %}
+
+<script>
+  // ✅ Django messages -> SweetAlert
+  (function(){
+    const msgs = [];
+    {% if messages %}
+      {% for message in messages %}
+        msgs.push({ level: "{{ message.tags }}", text: "{{ message|escapejs }}" });
+      {% endfor %}
+    {% endif %}
+
+    if (msgs.length) {
+      const m = msgs[0];
+      let icon = "info";
+      if (m.level.includes("success")) icon = "success";
+      if (m.level.includes("error")) icon = "error";
+      if (m.level.includes("warning")) icon = "warning";
+
+      Swal.fire({
+        icon,
+        title: "پیام سیستم",
+        text: m.text,
+        confirmButtonText: "باشه",
+      });
+    }
+  })();
+
+  // ✅ Confirm on SAVE
+  (function(){
+    const form = document.getElementById("mainForm");
+    if (!form) return;
+
+    form.addEventListener("submit", function(e){
+      if (form.dataset.confirmed === "1") return;
+
+      e.preventDefault();
+
+      Swal.fire({
+        icon: "question",
+        title: "ذخیره شود؟",
+        text: "اطلاعات ذخیره خواهد شد.",
+        showCancelButton: true,
+        confirmButtonText: "✅ ذخیره کن",
+        cancelButtonText: "لغو",
+        reverseButtons: true,
+      }).then((res) => {
+        if (res.isConfirmed) {
+          form.dataset.confirmed = "1";
+          form.submit();
+        }
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

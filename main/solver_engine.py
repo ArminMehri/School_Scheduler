@@ -353,14 +353,14 @@ def generate_schedule_with_ortools(max_time_seconds=60):
                     both = model.NewBoolVar(f"adj_{teacher.id}_{sl.id}")
                     model.AddBoolAnd([w, next_w]).OnlyEnforceIf(both)
                     model.AddBoolOr([w.Not(), next_w.Not()]).OnlyEnforceIf(both.Not())
-                    score_terms.append(4 * both)  # امتیاز برای چسبیده بودن
+                    score_terms.append(10 * both)  # امتیاز برای چسبیده بودن
 
                 # penalty isolated: w=1 و prev=0 و next=0
                 if prev_w is not None and next_w is not None:
                     iso = model.NewBoolVar(f"iso_{teacher.id}_{sl.id}")
                     model.AddBoolAnd([w, prev_w.Not(), next_w.Not()]).OnlyEnforceIf(iso)
                     model.AddBoolOr([w.Not(), prev_w, next_w]).OnlyEnforceIf(iso.Not())
-                    score_terms.append(-5 * iso)
+                    score_terms.append(-18 * iso)
 
                 # penalty gap pattern: work-0-work  (i, i+1, i+2)
                 if i < len(ordered) - 2:
@@ -370,7 +370,7 @@ def generate_schedule_with_ortools(max_time_seconds=60):
                     gap = model.NewBoolVar(f"gap1_{teacher.id}_{ordered[i].id}")
                     model.AddBoolAnd([w1, w2.Not(), w3]).OnlyEnforceIf(gap)
                     model.AddBoolOr([w1.Not(), w2, w3.Not()]).OnlyEnforceIf(gap.Not())
-                    score_terms.append(-4 * gap)
+                    score_terms.append(-14 * gap)
 
     # ----------------------------
     # SOFT: تا حد امکان دبیر واقعاً ست شود (برای درس‌هایی که اجازه می‌دهند)
@@ -379,7 +379,7 @@ def generate_schedule_with_ortools(max_time_seconds=60):
         if it.lesson.allow_without_teacher:
             # اگر امکانش بود t را 1 کن (ولی اجباری نیست)
             for sl in slots:
-                score_terms.append(2 * t[(it.id, sl.id)])
+                score_terms.append(6 * t[(it.id, sl.id)])
 
     # ----------------------------
     # هدف

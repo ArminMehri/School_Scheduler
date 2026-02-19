@@ -1,38 +1,326 @@
-{% extends "panel/base.html" %}
-{% block title %}{{ title }}{% endblock %}
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{{ title }}</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-{% block content %}
-  <div class="mb-4">
-    <h1 class="text-2xl font-black">{{ title }}</h1>
-    <p class="text-slate-500 text-sm mt-1">{{ subtitle }}</p>
-  </div>
+  <style>
+    :root{
+      --bg1:#050816;
+      --bg2:#0b1a3a;
+      --card:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --blue1:#4f8bff;
+      --blue2:#2f6bff;
+      --red1:#ff3b3b;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:22px;
+    }
 
-  <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-5 shadow-xl shadow-black/20">
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
+    body{
+      margin:0;
+      font-family: "Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+      background: radial-gradient(1200px 600px at 80% 10%, rgba(120,90,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 20% 90%, rgba(70,170,255,.18), transparent 55%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-size: 17px;
+    }
 
-      {% for field in form %}
-        <div>
-          <label class="block text-sm font-bold mb-2">{{ field.label }}</label>
-          {{ field }}
-          {% if field.help_text %}
-            <div class="text-xs text-slate-500 mt-1">{{ field.help_text }}</div>
-          {% endif %}
-          {% if field.errors %}
-            <div class="text-xs text-rose-600 mt-1">{{ field.errors }}</div>
-          {% endif %}
+    .wrap{max-width:1100px; margin:0 auto; padding:32px 18px;}
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    h1{margin:0 0 6px; font-size:28px;}
+    .sub{color:var(--muted); margin-bottom:16px}
+
+    /* Buttons */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      user-select:none;
+      transition: .18s ease;
+      font-size: 16px;
+    }
+    .btn-primary{
+      background: linear-gradient(90deg, var(--blue2), var(--blue1));
+      box-shadow: 0 14px 35px rgba(60,120,255,.25);
+      color:white;
+    }
+    .btn-primary:hover{ transform: translateY(-1px); filter:brightness(1.03); }
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.14);
+      color: var(--text);
+    }
+    .btn-ghost:hover{ background: rgba(255,255,255,.09); }
+
+    /* Fields */
+    form{margin-top: 14px;}
+    .field{margin-bottom:14px;}
+    label{
+      display:block;
+      color:var(--muted);
+      margin: 10px 0 6px;
+      font-weight:700;
+    }
+
+    input, select, textarea{
+      width:100%;
+      border-radius: 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(10,18,40,.55);
+      color: var(--text);
+      outline:none;
+      font-size: 16px;
+    }
+    textarea{min-height:110px;}
+
+    select option{
+      background: #0b1636;
+      color: rgba(255,255,255,.92);
+    }
+    select[multiple]{
+      padding: 10px;
+      min-height: 180px;
+      border-radius: 18px;
+      background: rgba(10,18,40,.45);
+    }
+    select[multiple] option:checked{
+      background: #2f6bff !important;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff;
+    }
+
+    /* Checkbox row */
+    .check-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      background: rgba(10,18,40,.35);
+      margin-top: 6px;
+      width: fit-content;
+      max-width: 100%;
+    }
+    .check-row input[type="checkbox"]{
+      width: 18px;
+      height: 18px;
+      margin:0;
+      accent-color: var(--blue2);
+      cursor:pointer;
+    }
+    .check-row .check-label{
+      color: rgba(255,255,255,.88);
+      font-weight:700;
+      margin:0;
+    }
+
+    .errors{
+      color:#ffd1d1;
+      background: rgba(255,0,0,.10);
+      border: 1px solid rgba(255,0,0,.25);
+      padding: 10px 12px;
+      border-radius: 14px;
+      margin-top: 8px;
+      line-height: 1.8;
+    }
+    .help{
+      color: rgba(255,255,255,.55);
+      margin-top: 6px;
+      font-size: 14px;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
+
+    /* Formset box */
+    .formset-box{
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(10,18,40,.28);
+    }
+    .formset-title{
+      font-weight:800;
+      margin: 0 0 10px;
+      color: rgba(255,255,255,.9);
+    }
+    .formset-row{
+      display:grid;
+      grid-template-columns: 1fr 1fr 140px 90px;
+      gap: 12px;
+      align-items:end;
+      padding: 12px 0;
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+    .formset-row:first-of-type{ border-top: 0; }
+    .small label{ font-size: 14px; margin-top: 0; }
+    .delete-cell{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:10px;
+      padding-bottom: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>{{ title }}</h1>
+      <div class="sub">{{ subtitle }}</div>
+
+      <form method="post" id="mainForm" novalidate>
+        {% csrf_token %}
+
+        {# ✅ خیلی مهم: hidden fields (مثل id و …) #}
+        {% for h in form.hidden_fields %}
+          {{ h }}
+        {% endfor %}
+
+        {# ✅ رندر فیلدهای اصلی #}
+        {% for field in form.visible_fields %}
+          <div class="field">
+            {% if field.field.widget.input_type == "checkbox" %}
+              <div class="check-row">
+                {{ field }}
+                <span class="check-label">{{ field.label }}</span>
+              </div>
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}<div class="errors">{{ field.errors }}</div>{% endif %}
+            {% else %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% if field.errors %}<div class="errors">{{ field.errors }}</div>{% endif %}
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        {# ✅ اگر فرم‌ست داری (TeacherAvailability) اینجا رندر میشه #}
+        {% if formset %}
+          {{ formset.management_form }}
+
+          <div class="formset-box">
+            <div class="formset-title">{{ formset_title|default:"آیتم‌های مرتبط" }}</div>
+
+            {% for f in formset.forms %}
+              {# hidden های هر فرم‌ست #}
+              {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+
+              <div class="formset-row">
+                {% for field in f.visible_fields %}
+                  {% if field.name == "DELETE" %}
+                    <div class="delete-cell">
+                      {{ field }}
+                      <span class="check-label">حذف</span>
+                    </div>
+                  {% else %}
+                    <div class="small">
+                      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                      {{ field }}
+                      {% if field.errors %}<div class="errors">{{ field.errors }}</div>{% endif %}
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            {% endfor %}
+
+            <div class="help" style="margin-top:10px">
+              برای حذف یک ردیف، تیک «حذف» را بزن و ذخیره کن.
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">💾 ذخیره</button>
+          <a class="btn btn-ghost" href="{% url cancel_url_name %}">↩️ بازگشت</a>
         </div>
-      {% endfor %}
-
-      {% if form.non_field_errors %}
-        <div class="text-rose-600 text-sm">{{ form.non_field_errors }}</div>
-      {% endif %}
-
-      <div class="flex gap-2 pt-2">
-        <button class="px-4 py-2 rounded-2xl bg-slate-900 text-white text-sm">💾 ذخیره</button>
-        <a class="px-4 py-2 rounded-2xl border border-slate-200 bg-white text-sm"
-           href="{% url cancel_url_name %}">انصراف</a>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
-{% endblock %}
+
+<script>
+  // ✅ Django messages -> SweetAlert
+  (function(){
+    const msgs = [];
+    {% if messages %}
+      {% for message in messages %}
+        msgs.push({ level: "{{ message.tags }}", text: "{{ message|escapejs }}" });
+      {% endfor %}
+    {% endif %}
+
+    if (msgs.length) {
+      const m = msgs[0];
+      let icon = "info";
+      if (m.level.includes("success")) icon = "success";
+      if (m.level.includes("error")) icon = "error";
+      if (m.level.includes("warning")) icon = "warning";
+
+      Swal.fire({
+        icon,
+        title: "پیام سیستم",
+        text: m.text,
+        confirmButtonText: "باشه",
+      });
+    }
+  })();
+
+  // ✅ Confirm on SAVE
+  (function(){
+    const form = document.getElementById("mainForm");
+    if (!form) return;
+
+    form.addEventListener("submit", function(e){
+      if (form.dataset.confirmed === "1") return;
+
+      e.preventDefault();
+
+      Swal.fire({
+        icon: "question",
+        title: "ذخیره شود؟",
+        text: "اطلاعات ذخیره خواهد شد.",
+        showCancelButton: true,
+        confirmButtonText: "✅ ذخیره کن",
+        cancelButtonText: "لغو",
+        reverseButtons: true,
+      }).then((res) => {
+        if (res.isConfirmed) {
+          form.dataset.confirmed = "1";
+          form.submit();
+        }
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

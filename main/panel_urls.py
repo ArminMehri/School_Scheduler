@@ -2,7 +2,21 @@ from django.urls import path
 from . import panel_views as v
 
 urlpatterns = [
+    # Auth
+
+
+    # Dashboard
     path("", v.panel_dashboard, name="panel_dashboard"),
+
+    # Actions
+    path("generate/", v.generate_schedule_view, name="generate_schedule"),
+    path("schedule/clear/", v.schedule_clear, name="schedule_clear"),
+    # Schedule actions
+    path("schedule/build/", v.panel_schedule_build, name="panel_schedule_build"),
+    path("schedule/clear/", v.panel_schedule_clear, name="panel_schedule_clear"),
+    # Exports
+    path("export/excel/classes/", v.export_excel_classes, name="export_excel_classes"),
+    path("export/excel/teachers/", v.export_excel_teachers, name="export_excel_teachers"),
 
     # Grades
     path("grades/", v.grade_list, name="grade_list"),
@@ -58,6 +72,6 @@ urlpatterns = [
     path("teaching-items/<int:pk>/edit/", v.item_update, name="item_update"),
     path("teaching-items/<int:pk>/delete/", v.item_delete, name="item_delete"),
 
-    # Schedule (نمایش)
+    # Schedule list (view)
     path("schedule/", v.schedule_list, name="schedule_list"),
 ]

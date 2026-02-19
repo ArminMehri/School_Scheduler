@@ -3,6 +3,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from main.models import Schedule
 from main.services.validator import run_full_validation
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from main.models import *
 from docx import Document
 from docx.shared import Pt
@@ -39,7 +42,8 @@ def fa(text: str) -> str:
     reshaped = arabic_reshaper.reshape(str(text))
     return get_display(reshaped)
 
-
+def site_index(request):
+    return render(request, "index.html")
 def export_schedule_pdf(request):
     # ✅ پیدا کردن فونت از static
     vazir_path = finders.find("fonts/Vazir.ttf")
@@ -504,5 +508,42 @@ def schedule_build_view(request):
     logs = request.session.get('schedule_logs', [])
     return render(request, "schedule_logs.html", {"logs": logs})
 
+def panel_login(request):
+    if request.user.is_authenticated:
+        return redirect("panel_dashboard")
+
+    form = AuthenticationForm(request, data=request.POST or None)
+
+    if request.method == "POST":
+        if form.is_valid():
+            login(request, form.get_user())
+            messages.success(request, "✅ با موفقیت وارد شدید.")
+            return redirect("panel_dashboard")
+        messages.error(request, "❌ نام کاربری یا رمز اشتباه است.")
+
+    return render(request, "panel/auth_login.html", {"form": form})
+
+
+def panel_register(request):
+    if request.user.is_authenticated:
+        return redirect("panel_dashboard")
+
+    form = UserCreationForm(request.POST or None)
+
+    if request.method == "POST":
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "✅ ثبت‌نام انجام شد.")
+            return redirect("panel_dashboard")
+        messages.error(request, "❌ لطفاً خطاهای فرم را برطرف کنید.")
+
+    return render(request, "panel/auth_register.html", {"form": form})
+
+
+def panel_logout(request):
+    logout(request)
+    messages.success(request, "✅ خارج شدید.")
+    return redirect("panel_login")
 
 

@@ -1,0 +1,355 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>برنامه‌ساز مدارس | صفحه اصلی</title>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    :root{
+      --bg1:#050816; --bg2:#0b1a3a;
+      --card:rgba(255,255,255,.08);
+      --card2:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --blue1:#4f8bff; --blue2:#2f6bff;
+      --green1:#19d18c; --green2:#0fb57a;
+      --red1:#ff3b3b;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:22px;
+    }
+
+    body{
+      margin:0;
+      font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 80% 10%, rgba(120,90,255,.25), transparent 55%),
+        radial-gradient(900px 500px at 20% 90%, rgba(70,170,255,.18), transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-size: 17px;
+    }
+
+    .wrap{max-width:1200px; margin:0 auto; padding:22px 18px 40px;}
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px 16px;
+      margin-bottom:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--border);
+      border-radius: 999px;
+      box-shadow: var(--shadow);
+    }
+    .brand{display:flex; align-items:center; gap:12px;}
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background: radial-gradient(circle at 30% 20%, rgba(120,150,255,.95), rgba(50,90,255,.55));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 12px 35px rgba(60,120,255,.22);
+    }
+    .brand .t1{font-weight:1000; line-height:1.2}
+    .brand .t2{color:var(--muted); font-size:13px; margin-top:2px}
+
+    .btns{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      border-radius:999px;
+      padding: 12px 18px;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight:1000;
+      text-decoration:none;
+      transition:.18s ease;
+      font-size:16px;
+      user-select:none;
+      color:white;
+    }
+    .btn-primary{
+      background:linear-gradient(90deg, var(--blue2), var(--blue1));
+      box-shadow:0 14px 35px rgba(60,120,255,.22);
+    }
+    .btn-primary:hover{transform:translateY(-1px); filter:brightness(1.03);}
+    .btn-green{
+      background:linear-gradient(90deg, var(--green2), var(--green1));
+      box-shadow:0 14px 35px rgba(20,220,140,.18);
+    }
+    .btn-green:hover{transform:translateY(-1px); filter:brightness(1.03);}
+    .btn-ghost{
+      background:rgba(255,255,255,.07);
+      border-color:rgba(255,255,255,.14);
+      color:var(--text);
+    }
+    .btn-ghost:hover{background:rgba(255,255,255,.10);}
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap:16px;
+      align-items:stretch;
+    }
+    @media (max-width:950px){ .hero{grid-template-columns:1fr;} }
+
+    .card{
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+    h1{margin:0 0 10px; font-size:34px;}
+    .sub{color:var(--muted); line-height:1.9}
+
+    .badges{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+    .badge{
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--text);
+      font-weight:900;
+      font-size:14px;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap:14px;
+      margin-top:16px;
+    }
+    @media (max-width:950px){ .grid3{grid-template-columns:1fr;} }
+
+    .feature{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .feature .t{font-weight:1000; margin-bottom:6px}
+    .feature .d{color:var(--muted); line-height:1.9}
+
+    .pricing{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap:14px;
+      margin-top:16px;
+    }
+    @media (max-width:1100px){ .pricing{grid-template-columns:1fr;} }
+
+    .price{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 18px;
+      padding: 18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .price .name{font-weight:1000; font-size:20px;}
+    .price .p{font-size:28px; font-weight:1000; margin:10px 0;}
+    .price ul{margin:0; padding:0 18px 0 0; color:var(--muted); line-height:2}
+    .price .cta{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;}
+    .tag{
+      position:absolute;
+      top:12px; left:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(79,139,255,.18);
+      border:1px solid rgba(79,139,255,.35);
+      font-weight:1000;
+      font-size:13px;
+      color:#cfe0ff;
+    }
+
+    .footer{
+      margin-top:18px;
+      color:var(--muted);
+      text-align:center;
+      font-size:14px;
+      line-height:2;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div class="t1">برنامه‌ساز حرفه‌ای مدارس</div>
+          <div class="t2">ساخت برنامه کلاسی با رعایت قوانین + خروجی اکسل/PDF</div>
+        </div>
+      </div>
+
+      <div class="btns">
+        {% if user.is_authenticated %}
+          <a class="btn btn-green" href="{% url 'panel_dashboard' %}">رفتن به داشبورد</a>
+          <a class="btn btn-ghost" href="{% url 'panel_logout' %}" data-logout>خروج</a>
+        {% else %}
+          <a class="btn btn-primary" href="{% url 'panel_login' %}">ورود</a>
+          <a class="btn btn-ghost" href="{% url 'panel_register' %}">ثبت‌نام</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="card">
+        <h1>برنامه‌ریزی مدرسه، سریع‌تر از همیشه 🚀</h1>
+        <div class="sub">
+          این سیستم به مدیر مدرسه کمک می‌کند با وارد کردن دبیرها، درس‌ها، کلاس‌ها و حضور دبیرها،
+          <b>برنامه‌ی هفتگی</b> را به صورت خودکار بسازد و خروجی <b>اکسل و PDF</b> بگیرد.
+          <br><br>
+          شما می‌توانید این صفحه را هرطور دوست دارید پر کنید: توضیحات، قوانین، نمونه خروجی، شرایط خرید و...
+        </div>
+
+        <div class="badges">
+          <div class="badge">✅ رعایت حضور دبیرها</div>
+          <div class="badge">✅ قوانین جفت‌زنگ / تک‌زنگ</div>
+          <div class="badge">✅ خروجی اکسل و PDF</div>
+          <div class="badge">✅ پنل شیک و سریع</div>
+        </div>
+
+        <div class="grid3">
+          <div class="feature">
+            <div class="t">ساخت برنامه هوشمند</div>
+            <div class="d">با یک کلیک برنامه تولید میشه و می‌تونی دوباره تولید کنی.</div>
+          </div>
+          <div class="feature">
+            <div class="t">پنل مدیریت مثل ادمین</div>
+            <div class="d">همه چیز قابل افزودن/ویرایش/حذف با ظاهر حرفه‌ای.</div>
+          </div>
+          <div class="feature">
+            <div class="t">خروجی برای پرینت</div>
+            <div class="d">اکسل و PDF آماده چاپ + مناسب ارائه به مدرسه.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h1 style="font-size:26px;margin-bottom:8px;">درباره ما</h1>
+        <div class="sub">
+          این بخش مخصوص معرفی شماست: سابقه، نمونه کار، شماره تماس، واتساپ، هرچی می‌خوای.
+          <br><br>
+          <b>پیشنهاد:</b> یک دکمه تماس یا درخواست دمو هم بذار.
+        </div>
+
+        <div class="cta" style="margin-top:14px;">
+          <a class="btn btn-primary" href="#" onclick="demoAlert();return false;">درخواست دمو</a>
+          <a class="btn btn-ghost" href="#" onclick="contactAlert();return false;">تماس با ما</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h1 style="font-size:26px;margin-bottom:8px;">پلن‌ها و قیمت‌ها</h1>
+      <div class="sub">این قسمت هم قابل تغییر کامل هست. قیمت‌ها رو خودت هرچی خواستی بذار.</div>
+
+      <div class="pricing">
+        <div class="price">
+          <div class="name">پلن پایه</div>
+          <div class="p">X تومان</div>
+          <ul>
+            <li>ساخت برنامه</li>
+            <li>خروجی اکسل</li>
+            <li>پشتیبانی محدود</li>
+          </ul>
+          <div class="cta">
+            <a class="btn btn-primary" href="#" onclick="buyAlert('پلن پایه');return false;">خرید</a>
+            <a class="btn btn-ghost" href="#" onclick="demoAlert();return false;">مشاهده دمو</a>
+          </div>
+        </div>
+
+        <div class="price">
+          <div class="tag">پیشنهادی</div>
+          <div class="name">پلن حرفه‌ای</div>
+          <div class="p">Y تومان</div>
+          <ul>
+            <li>همه امکانات پلن پایه</li>
+            <li>خروجی PDF</li>
+            <li>پشتیبانی بهتر</li>
+          </ul>
+          <div class="cta">
+            <a class="btn btn-green" href="#" onclick="buyAlert('پلن حرفه‌ای');return false;">خرید</a>
+            <a class="btn btn-ghost" href="#" onclick="demoAlert();return false;">مشاهده دمو</a>
+          </div>
+        </div>
+
+        <div class="price">
+          <div class="name">پلن سازمانی</div>
+          <div class="p">تماس بگیرید</div>
+          <ul>
+            <li>سفارشی‌سازی</li>
+            <li>آموزش و راه‌اندازی</li>
+            <li>پشتیبانی ویژه</li>
+          </ul>
+          <div class="cta">
+            <a class="btn btn-primary" href="#" onclick="contactAlert();return false;">تماس</a>
+            <a class="btn btn-ghost" href="#" onclick="demoAlert();return false;">دمو</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      © برنامه‌ساز مدارس — این متن را می‌توانی عوض کنی<br>
+      ساخته شده برای مدیریت سریع و دقیق برنامه‌های هفتگی
+    </div>
+
+  </div>
+
+<script>
+  function demoAlert(){
+    Swal.fire({
+      icon:"info",
+      title:"درخواست دمو",
+      text:"اینجا می‌تونی شماره/واتساپ/فرم درخواست دمو بذاری.",
+      confirmButtonText:"باشه"
+    });
+  }
+  function contactAlert(){
+    Swal.fire({
+      icon:"success",
+      title:"تماس با ما",
+      html:"<div style='line-height:2'>شماره تماس: <b>09xx...</b><br>واتساپ: <b>@yourid</b></div>",
+      confirmButtonText:"باشه"
+    });
+  }
+  function buyAlert(plan){
+    Swal.fire({
+      icon:"question",
+      title:"خرید " + plan,
+      text:"این دکمه فعلاً نمایشی است. بعداً می‌تونیم پرداخت آنلاین هم وصل کنیم.",
+      confirmButtonText:"باشه"
+    });
+  }
+
+  // خروج با sweetalert
+  (function(){
+    const a = document.querySelector("[data-logout]");
+    if(!a) return;
+    a.addEventListener("click", function(e){
+      e.preventDefault();
+      Swal.fire({
+        icon:"warning",
+        title:"خروج از حساب؟",
+        text:"مطمئنی می‌خوای خارج بشی؟",
+        showCancelButton:true,
+        confirmButtonText:"بله، خروج",
+        cancelButtonText:"لغو",
+        reverseButtons:true
+      }).then((res)=>{
+        if(res.isConfirmed){
+          window.location.href = a.getAttribute("href");
+        }
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

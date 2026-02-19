@@ -24,7 +24,11 @@ urlpatterns = [
     path('export-excel/', views.export_schedule_excel, name='export_excel'),
     path("export-excel-teacher/", views.export_schedule_excel_teacher, name="export_excel_teacher"),
     path("export-pdf/", views.export_schedule_pdf, name="export_pdf"),
-    path("", include("main.panel_urls")),
+    path("", views.site_index, name="site_index"),
     path("panel/", include("main.panel_urls")),
     path('Logs/', views.schedule_build_view, name='schedule-build'),
+    path("login/", views.panel_login, name="panel_login"),
+    path("register/", views.panel_register, name="panel_register"),
+    path("logout/", views.panel_logout, name="panel_logout"),
+
 ]
