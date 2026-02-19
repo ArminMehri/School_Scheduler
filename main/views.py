@@ -34,7 +34,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from django.contrib.staticfiles import finders
 import os
 from .models import SchoolClass, SchoolDay, Schedule
-
+from openpyxl.utils import get_column_letter
 
 def fa(text: str) -> str:
     if text is None:
@@ -165,35 +165,44 @@ def export_schedule_pdf(request):
     return response
 
 def export_schedule_excel(request):
-    # ایجاد Workbook و Sheet
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "برنامه کلاسی"
 
-    # تنظیم راست‌چین و فونت B Titr
-    align_right = Alignment(horizontal='right', vertical='center', wrap_text=True)
-    b_titr_font = Font(name='B Titr')
+    # ---------- Styles ----------
+    b_titr = Font(name="B Titr")
 
-    # ✅ استایل قرمز برای سلول‌های بدون معلم
+    align_right_center = Alignment(horizontal="right", vertical="center", wrap_text=True)
+    align_center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    # Rotate Up (90 درجه)
+    rotate_up = Alignment(horizontal="center", vertical="center", text_rotation=90, wrap_text=False)
+
+    # Rotate Up + wrap (برای وقتی متن طولانی شد)
+    rotate_up_wrap = Alignment(horizontal="center", vertical="center", text_rotation=90, wrap_text=True)
+
+    # قرمز برای بدون دبیر
     red_fill = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-    white_bold_font = Font(name='B Titr', color="FFFFFF", bold=True)
+    white_bold = Font(name="B Titr", color="FFFFFF", bold=True)
 
-    # گرفتن کلاس‌ها و روزها
-    classes = SchoolClass.objects.select_related('grade').all()
-    days = SchoolDay.objects.filter(is_active=True).prefetch_related('dayperiod_set')
+    # ---------- Data ----------
+    classes = SchoolClass.objects.select_related("grade").all()
+    days = SchoolDay.objects.filter(is_active=True).prefetch_related("dayperiod_set")
 
-    # ردیف اول: روزهای هفته
+    # ---------- Header Row 1: Days ----------
     ws.merge_cells(start_row=1, start_column=1, end_row=2, end_column=1)
     cell = ws.cell(row=1, column=1, value="نام کلاس")
-    cell.alignment = align_right
-    cell.font = Font(name='B Titr')
+    cell.alignment = align_right_center
+    cell.font = b_titr
 
-    col_index = 2  # ستون اول برای اسم کلاس
+    col_index = 2
     for day in days:
-        periods_count = day.dayperiod_set.count()
+        periods = list(day.dayperiod_set.all())
+        periods_count = len(periods)
+
         cell = ws.cell(row=1, column=col_index, value=day.name)
-        cell.alignment = align_right
-        cell.font = b_titr_font
+        cell.alignment = align_center  # روزها رو rotate نکن (طبق خواسته)
+        cell.font = b_titr
 
         if periods_count > 1:
             ws.merge_cells(
@@ -203,21 +212,26 @@ def export_schedule_excel(request):
 
         col_index += periods_count
 
-    # ردیف دوم: زنگ‌ها
+    # ---------- Header Row 2: Periods (Rotate Up) ----------
     col_index = 2
     for day in days:
         for period in day.dayperiod_set.all():
             cell = ws.cell(row=2, column=col_index, value=f"زنگ {period.period_number}")
-            cell.alignment = align_right
-            cell.font = b_titr_font
+            cell.font = b_titr
+            cell.alignment = rotate_up  # ✅ rotate زنگ‌ها
             col_index += 1
 
-    # ستون اول: اسم کلاس‌ها
+    # کمی ارتفاع هدرها
+    ws.row_dimensions[1].height = 24
+    ws.row_dimensions[2].height = 55  # چون rotate شده
+
+    # ---------- Body ----------
     row_index = 3
     for school_class in classes:
+        # اسم کلاس‌ها (بدون rotate طبق خواسته)
         cell_class = ws.cell(row=row_index, column=1, value=school_class.name)
-        cell_class.alignment = align_right
-        cell_class.font = b_titr_font
+        cell_class.alignment = align_right_center
+        cell_class.font = b_titr
 
         col_index = 2
         for day in days:
@@ -225,44 +239,54 @@ def export_schedule_excel(request):
                 sched = Schedule.objects.filter(
                     school_class=school_class,
                     day_period=period
-                ).first()
+                ).select_related("lesson", "teacher").first()
 
                 cell = ws.cell(row=row_index, column=col_index)
 
                 if sched:
-                    if sched.teacher:
-                        cell.value = f"{sched.lesson.name}\n{sched.teacher.name}"
-                        cell.font = b_titr_font
-                    else:
-                        cell.value = f"{sched.lesson.name}\nبدون معلم"
-                        cell.fill = red_fill
-                        cell.font = white_bold_font
-                else:
-                    cell.value = "---"
-                    cell.font = b_titr_font
+                    # ✅ فقط نام درس (اسم دبیر حذف شد)
+                    cell.value = sched.lesson.name
 
-                cell.alignment = align_right
+                    if sched.teacher is None:
+                        # ✅ فقط اگر بدون دبیر بود، قرمز شود
+                        cell.fill = red_fill
+                        cell.font = white_bold
+                    else:
+                        cell.font = b_titr
+
+                    # rotate up برای درس‌ها (کم جا)
+                    # اگر اسم درس‌ها خیلی طولانیه، rotate_up_wrap بهتره
+                    cell.alignment = rotate_up_wrap
+
+                else:
+                    cell.value = ""
+                    cell.font = b_titr
+                    cell.alignment = rotate_up  # خالی هم rotate مشکلی ندارد
+
                 col_index += 1
 
+        # صرفه‌جویی: ارتفاع ردیف‌های کلاس‌ها کمتر
+        ws.row_dimensions[row_index].height = 60
         row_index += 1
 
-    # تنظیم عرض ستون‌ها (Auto width تقریبی)
-    for col_cells in ws.columns:
-        max_length = 0
-        column_letter = None
-        for cell in col_cells:
-            if hasattr(cell, "column_letter") and cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-                if column_letter is None:
-                    column_letter = cell.column_letter
-        if column_letter:
-            ws.column_dimensions[column_letter].width = max_length + 5
+    # ---------- Column widths (صرفه‌جویی ستونی) ----------
+    # ستون کلاس‌ها پهن‌تر، بقیه باریک‌تر چون rotate شده
+    ws.column_dimensions["A"].width = 14  # اسم کلاس‌ها
 
-    # پاسخ HTTP
+    # بقیه ستون‌ها باریک
+    max_col = ws.max_column
+    for c in range(2, max_col + 1):
+        ws.column_dimensions[get_column_letter(c)].width = 5.2  # خیلی جمع‌وجور
+
+    # ---------- Freeze panes ----------
+    # هدرها و ستون کلاس‌ها ثابت بمونه موقع اسکرول
+    ws.freeze_panes = "B3"
+
+    # ---------- Response ----------
     response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response['Content-Disposition'] = 'attachment; filename=barname_kelasi.xlsx'
+    response["Content-Disposition"] = "attachment; filename=barname_kelasi.xlsx"
     wb.save(response)
     return response
 
@@ -272,33 +296,30 @@ def export_schedule_excel_teacher(request):
     ws.title = "برنامه دبیران"
 
     # ------------------------
-    # استایل‌ها
+    # Styles
     # ------------------------
-    align_right = Alignment(horizontal='right', vertical='center', wrap_text=True)
-    align_center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    b_titr = Font(name="B Titr")
+    b_titr_bold = Font(name="B Titr", bold=True)
 
-    b_titr = Font(name='B Titr')
-    b_titr_bold = Font(name='B Titr', bold=True)
+    align_right_center = Alignment(horizontal="right", vertical="center", wrap_text=True)
+    align_center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    # Rotate Up (90deg) برای زنگ‌ها و نام کلاس‌ها
+    rotate_up = Alignment(horizontal="center", vertical="center", text_rotation=90, wrap_text=False)
+    rotate_up_wrap = Alignment(horizontal="center", vertical="center", text_rotation=90, wrap_text=True)
 
     header_fill = PatternFill(start_color="EDEDED", end_color="EDEDED", fill_type="solid")
 
-    thin_border = Border(
-        left=Side(style="thin"),
-        right=Side(style="thin"),
-        top=Side(style="thin"),
-        bottom=Side(style="thin"),
-    )
+    # ✅ Border مشکی برای همه سلول‌ها
+    black_thin = Side(style="thin", color="000000")
+    black_thick = Side(style="thick", color="000000")
 
-    thick_right_border = Border(
-        right=Side(style="thick")
-    )
-
-    thick_left_border = Border(
-        left=Side(style="thick")
-    )
+    thin_border = Border(left=black_thin, right=black_thin, top=black_thin, bottom=black_thin)
+    thick_right_border = Border(right=black_thick, left=black_thin, top=black_thin, bottom=black_thin)
+    thick_left_border = Border(left=black_thick, right=black_thin, top=black_thin, bottom=black_thin)
 
     # ------------------------
-    # تنظیمات پرینت
+    # Print settings (صرفه‌جویی)
     # ------------------------
     ws.page_setup.orientation = "landscape"
     ws.page_setup.paperSize = 9  # A4
@@ -315,10 +336,10 @@ def export_schedule_excel_teacher(request):
 
     # ------------------------
     teachers = Teacher.objects.all().order_by("name")
-    days = SchoolDay.objects.filter(is_active=True).prefetch_related('dayperiod_set')
+    days = SchoolDay.objects.filter(is_active=True).prefetch_related("dayperiod_set")
 
     # ------------------------
-    # هدر
+    # Header Row 1: Days (NO rotate)
     # ------------------------
     ws.merge_cells(start_row=1, start_column=1, end_row=2, end_column=1)
     c = ws.cell(row=1, column=1, value="نام دبیر")
@@ -331,44 +352,50 @@ def export_schedule_excel_teacher(request):
     day_end_columns = []
 
     for day in days:
-        periods = day.dayperiod_set.all()
+        periods = list(day.dayperiod_set.all())
         start_col = col_index
-        end_col = col_index + periods.count() - 1
+        end_col = col_index + len(periods) - 1
         day_end_columns.append(end_col)
 
         c = ws.cell(row=1, column=start_col, value=day.name)
-        c.alignment = align_center
+        c.alignment = align_center  # روزها rotate نشوند
         c.font = b_titr_bold
         c.fill = header_fill
+        c.border = thin_border
 
-        if periods.count() > 1:
-            ws.merge_cells(
-                start_row=1, start_column=start_col,
-                end_row=1, end_column=end_col
-            )
+        if len(periods) > 1:
+            ws.merge_cells(start_row=1, start_column=start_col, end_row=1, end_column=end_col)
 
-        col_index += periods.count()
+        # کل سلول‌های رنج روز هم border بگیرن
+        for cc in range(start_col, end_col + 1):
+            ws.cell(row=1, column=cc).border = thin_border
+
+        col_index += len(periods)
 
     # ------------------------
-    # ردیف دوم: زنگ‌ها
+    # Header Row 2: Periods (Rotate Up ✅)
     # ------------------------
     col_index = 2
     for day in days:
         for period in day.dayperiod_set.all():
             c = ws.cell(row=2, column=col_index, value=f"زنگ {period.period_number}")
-            c.alignment = align_center
+            c.alignment = rotate_up  # ✅ rotate زنگ‌ها
             c.font = b_titr_bold
             c.fill = header_fill
             c.border = thin_border
             col_index += 1
 
+    ws.row_dimensions[1].height = 24
+    ws.row_dimensions[2].height = 55  # چون rotate شده
+
     # ------------------------
-    # داده‌ها
+    # Data rows
     # ------------------------
     row_index = 3
     for teacher in teachers:
+        # اسم دبیر (NO rotate)
         c0 = ws.cell(row=row_index, column=1, value=teacher.name)
-        c0.alignment = align_right
+        c0.alignment = align_right_center
         c0.font = b_titr_bold
         c0.border = thick_left_border
 
@@ -381,60 +408,53 @@ def export_schedule_excel_teacher(request):
                 ).select_related("school_class").first()
 
                 cell = ws.cell(row=row_index, column=col_index)
-                cell.alignment = align_center
+
+                # ✅ نام کلاس داخل سلول rotate up
+                cell.value = sched.school_class.name if sched else ""
                 cell.font = b_titr
-                cell.value = sched.school_class.name if sched else "---"
+                cell.alignment = rotate_up_wrap
                 cell.border = thin_border
 
                 col_index += 1
 
+        # صرفه‌جویی: ارتفاع ردیف‌ها کمتر ولی خوانا
+        ws.row_dimensions[row_index].height = 60
         row_index += 1
 
     # ------------------------
-    # 🔥 خط ضخیم بین روزها
+    # ✅ خط ضخیم مشکی بین روزها
     # ------------------------
     max_row = ws.max_row
     for end_col in day_end_columns:
         for r in range(1, max_row + 1):
-            ws.cell(row=r, column=end_col).border = Border(
-                right=Side(style="thick"),
-                left=ws.cell(row=r, column=end_col).border.left,
-                top=ws.cell(row=r, column=end_col).border.top,
-                bottom=ws.cell(row=r, column=end_col).border.bottom,
-            )
+            # اگر ستون آخرِ روزه، border راستش ضخیم بشه
+            ws.cell(row=r, column=end_col).border = thick_right_border
 
     # ------------------------
-    # Auto width + row height
+    # Column widths (صرفه‌جویی)
     # ------------------------
-    for col_cells in ws.columns:
-        max_length = 0
-        column_letter = None
-        for cell in col_cells:
-            if hasattr(cell, "column_letter") and cell.value:
-                max_length = max(max_length, len(str(cell.value)))
-                if column_letter is None:
-                    column_letter = cell.column_letter
-        if column_letter:
-            ws.column_dimensions[column_letter].width = min(max_length + 4, 28)
+    ws.column_dimensions["A"].width = 18  # اسم دبیرها
 
-    for r in range(1, ws.max_row + 1):
-        ws.row_dimensions[r].height = 28
+    # بقیه ستون‌ها باریک چون rotate شده
+    max_col = ws.max_column
+    for c in range(2, max_col + 1):
+        ws.column_dimensions[get_column_letter(c)].width = 5.2
 
-    # ------------------------
-    # Print Area
-    # ------------------------
+    # Freeze panes
+    ws.freeze_panes = "B3"
+
+    # Print area
     last_col = ws.max_column
     last_row = ws.max_row
-    ws.print_area = f"A1:{openpyxl.utils.get_column_letter(last_col)}{last_row}"
+    ws.print_area = f"A1:{get_column_letter(last_col)}{last_row}"
 
     # ------------------------
     response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response['Content-Disposition'] = 'attachment; filename=barname_dabiran.xlsx'
+    response["Content-Disposition"] = "attachment; filename=barname_dabiran.xlsx"
     wb.save(response)
     return response
-
 def schedule_table(request):
 
     classes = SchoolClass.objects.select_related('grade').all()
