@@ -1,0 +1,30 @@
+{% extends "panel/base.html" %}
+{% block title %}تنظیمات{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl">
+  <div class="text-2xl font-extrabold mb-2">تنظیمات</div>
+  <div class="text-sm text-slate-500 dark:text-slate-400 mb-6">
+    تنظیمات عمومی مدرسه (بعداً اینجا می‌تونیم لوگو، نام مدرسه، سال تحصیلی، تعداد زنگ‌ها… رو اضافه کنیم)
+  </div>
+
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="font-bold">تم</div>
+        <div class="text-sm text-slate-500 dark:text-slate-400">دارک/لایت</div>
+      </div>
+      <button onclick="toggleTheme()" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+        تغییر تم
+      </button>
+    </div>
+
+    <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+      <div class="font-bold">خروجی‌ها</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+        می‌تونی از داشبورد خروجی Excel/PDF بگیری.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <div class="flex items-start justify-between gap-3 mb-4">
+    <div>
+      <h1 class="text-3xl font-black">{{ title }}</h1>
+      <p class="text-slate-300 text-sm mt-1">{{ subtitle }}</p>
+    </div>
+
+    {% if add_url_name %}
+      <a href="{% url add_url_name %}"
+         class="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-blue-500 hover:bg-blue-400 transition font-extrabold">
+        <span class="text-xl">+</span> افزودن
+      </a>
+    {% endif %}
+  </div>
+
+  <div class="glass rounded-3xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-white/10">
+            {% for h in headers %}
+              <th class="text-right px-4 py-4 font-black text-slate-100 whitespace-nowrap">{{ h }}</th>
+            {% endfor %}
+            {% if actions %}
+              <th class="text-center px-4 py-4 font-black text-slate-100 whitespace-nowrap">عملیات</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr class="border-t border-white/10 hover:bg-white/5 transition">
+              {% for c in row.cols %}
+                <td class="px-4 py-4 text-slate-100 whitespace-pre-line">{{ c }}</td>
+              {% endfor %}
+
+              {% if actions %}
+                <td class="px-4 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    {% if row.edit_url %}
+                      <a class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 transition font-bold"
+                         href="{% url row.edit_url.0 row.edit_url.1 %}">ویرایش</a>
+                    {% endif %}
+                    {% if row.delete_url %}
+                      <a class="px-3 py-2 rounded-xl bg-red-500/80 hover:bg-red-500 transition font-bold"
+                         href="{% url row.delete_url.0 row.delete_url.1 %}">حذف</a>
+                    {% endif %}
+                  </div>
+                </td>
+              {% endif %}
+            </tr>
+          {% empty %}
+            <tr>
+              <td class="px-4 py-6 text-slate-300" colspan="99">موردی یافت نشد.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

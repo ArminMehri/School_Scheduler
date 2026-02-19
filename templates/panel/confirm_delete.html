@@ -1,0 +1,23 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="text-3xl font-black">{{ title }}</h1>
+    <p class="text-slate-300 text-sm mt-1">{{ subtitle }}</p>
+  </div>
+
+  <div class="glass rounded-3xl p-6 max-w-xl">
+    <div class="text-slate-100">
+      <div class="font-extrabold">آیتم:</div>
+      <div class="mt-1 text-slate-200">{{ obj }}</div>
+    </div>
+
+    <form method="post" class="mt-5 flex items-center gap-2">
+      {% csrf_token %}
+      <button class="px-5 py-3 rounded-2xl bg-red-500 hover:bg-red-400 transition font-extrabold" type="submit">حذف</button>
+      <a class="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 transition font-extrabold"
+         href="{% url cancel_url_name %}">انصراف</a>
+    </form>
+  </div>
+{% endblock %}

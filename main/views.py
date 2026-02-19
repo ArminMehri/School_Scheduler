@@ -503,3 +503,6 @@ def schedule_build_view(request):
     # دریافت لاگ‌ها از session
     logs = request.session.get('schedule_logs', [])
     return render(request, "schedule_logs.html", {"logs": logs})
+
+
+

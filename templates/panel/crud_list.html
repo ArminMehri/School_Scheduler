@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+
+    <div class="flex items-center justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-2xl font-black">{{ title }}</h1>
+        <p class="text-slate-500 text-sm mt-1">{{ subtitle }}</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="/panel/" class="px-4 py-2 rounded-2xl bg-slate-900 text-white">داشبورد</a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-100">
+            <tr>
+              {% for h in headers %}
+                <th class="text-right px-4 py-3 font-bold whitespace-nowrap">{{ h }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr class="border-t border-slate-100 hover:bg-slate-50">
+                {% for col in row %}
+                  <td class="px-4 py-3 whitespace-pre-line">{{ col }}</td>
+                {% endfor %}
+              </tr>
+            {% empty %}
+              <tr>
+                <td class="px-4 py-6 text-slate-500" colspan="50">چیزی برای نمایش نیست.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

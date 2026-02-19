@@ -1,0 +1,38 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+  <div class="mb-4">
+    <h1 class="text-2xl font-black">{{ title }}</h1>
+    <p class="text-slate-500 text-sm mt-1">{{ subtitle }}</p>
+  </div>
+
+  <div class="rounded-3xl border border-white/10 bg-white/5 backdrop-blur p-5 shadow-xl shadow-black/20">
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      {% for field in form %}
+        <div>
+          <label class="block text-sm font-bold mb-2">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+            <div class="text-xs text-slate-500 mt-1">{{ field.help_text }}</div>
+          {% endif %}
+          {% if field.errors %}
+            <div class="text-xs text-rose-600 mt-1">{{ field.errors }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      {% if form.non_field_errors %}
+        <div class="text-rose-600 text-sm">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="flex gap-2 pt-2">
+        <button class="px-4 py-2 rounded-2xl bg-slate-900 text-white text-sm">💾 ذخیره</button>
+        <a class="px-4 py-2 rounded-2xl border border-slate-200 bg-white text-sm"
+           href="{% url cancel_url_name %}">انصراف</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

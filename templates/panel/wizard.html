@@ -1,0 +1,54 @@
+{% extends "panel/base.html" %}
+{% block title %}ورود اطلاعات{% endblock %}
+
+{% block content %}
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6">
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <div class="text-2xl font-extrabold">ورود اطلاعات</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">مرحله‌ای کامل کن، بعد برو مرحله بعد.</div>
+    </div>
+    <a href="{% url 'panel_dashboard' %}" class="px-4 py-2 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+      بازگشت
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
+    <a class="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-950"
+       href="{% url 'panel_classes' %}">
+      <div class="font-extrabold">1) کلاس‌ها</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">پایه و کلاس‌ها</div>
+    </a>
+
+    <a class="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-950"
+       href="{% url 'panel_lessons' %}">
+      <div class="font-extrabold">2) درس‌ها</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">ساعت هفتگی + بدون دبیر + paired</div>
+    </a>
+
+    <a class="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-950"
+       href="{% url 'panel_teachers' %}">
+      <div class="font-extrabold">3) دبیرها</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">ظرفیت + دروس قابل تدریس + محدودیت پایه</div>
+    </a>
+
+    <a class="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-950"
+       href="{% url 'panel_availability' %}">
+      <div class="font-extrabold">4) حضور دبیرها</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">هر روز چند ساعت حاضر است</div>
+    </a>
+
+    <a class="p-5 rounded-3xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-950"
+       href="{% url 'panel_assignments' %}">
+      <div class="font-extrabold">5) تخصیص درس به کلاس</div>
+      <div class="text-sm text-slate-500 dark:text-slate-400 mt-1">Auto Assign / دستی</div>
+    </a>
+
+    <a class="p-5 rounded-3xl border border-emerald-200 dark:border-emerald-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+       href="{% url 'panel_schedule' %}">
+      <div class="font-extrabold text-emerald-700 dark:text-emerald-200">6) مشاهده و خروجی</div>
+      <div class="text-sm text-slate-600 dark:text-slate-300 mt-1">برنامه ساخته‌شده را ببین</div>
+    </a>
+  </div>
+</div>
+{% endblock %}
