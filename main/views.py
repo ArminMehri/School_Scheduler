@@ -10,17 +10,12 @@ from docx.oxml.ns import qn
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from .solver_engine import generate_schedule_with_ortools
-import openpyxl
-from openpyxl.styles import Alignment, Font, PatternFill
-import openpyxl
 from django.http import HttpResponse
-
-
 import openpyxl
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Font, PatternFill,Border,Side
 from django.http import HttpResponse
 from main.models import SchoolClass, SchoolDay, Schedule
-
+from openpyxl.worksheet.page import PageMargins
 
 def export_schedule_excel(request):
     # ایجاد Workbook و Sheet
@@ -124,85 +119,174 @@ def export_schedule_excel(request):
     wb.save(response)
     return response
 
+def export_schedule_excel_teacher(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "برنامه دبیران"
 
-def export_schedule_word(request):
-    document = Document()
-    document.add_heading('برنامه کلاسی مدرسه', level=1)
+    # ------------------------
+    # استایل‌ها
+    # ------------------------
+    align_right = Alignment(horizontal='right', vertical='center', wrap_text=True)
+    align_center = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-    classes = SchoolClass.objects.select_related('grade').all()
+    b_titr = Font(name='B Titr')
+    b_titr_bold = Font(name='B Titr', bold=True)
+
+    header_fill = PatternFill(start_color="EDEDED", end_color="EDEDED", fill_type="solid")
+
+    thin_border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+
+    thick_right_border = Border(
+        right=Side(style="thick")
+    )
+
+    thick_left_border = Border(
+        left=Side(style="thick")
+    )
+
+    # ------------------------
+    # تنظیمات پرینت
+    # ------------------------
+    ws.page_setup.orientation = "landscape"
+    ws.page_setup.paperSize = 9  # A4
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+
+    ws.page_margins = PageMargins(
+        left=0.2, right=0.2,
+        top=0.3, bottom=0.3,
+        header=0.1, footer=0.1
+    )
+
+    ws.print_title_rows = "1:2"
+
+    # ------------------------
+    teachers = Teacher.objects.all().order_by("name")
     days = SchoolDay.objects.filter(is_active=True).prefetch_related('dayperiod_set')
 
+    # ------------------------
+    # هدر
+    # ------------------------
+    ws.merge_cells(start_row=1, start_column=1, end_row=2, end_column=1)
+    c = ws.cell(row=1, column=1, value="نام دبیر")
+    c.alignment = align_center
+    c.font = b_titr_bold
+    c.fill = header_fill
+    c.border = thick_left_border
 
-    # محاسبه تعداد کل ستون‌ها
-    total_periods = 0
-    for day in days:
-        total_periods += day.dayperiod_set.count()
+    col_index = 2
+    day_end_columns = []
 
-    table = document.add_table(rows=2 + classes.count(), cols=1 + total_periods)
-    table.style = 'Table Grid'
-
-    # ردیف اول: روزهای هفته
-    header_row_days = table.rows[0]
-    header_row_days.cells[0].text = "کلاس"
-
-    col_index = 1
     for day in days:
         periods = day.dayperiod_set.all()
-        span_count = periods.count()
+        start_col = col_index
+        end_col = col_index + periods.count() - 1
+        day_end_columns.append(end_col)
 
-        header_row_days.cells[col_index].text = day.name
+        c = ws.cell(row=1, column=start_col, value=day.name)
+        c.alignment = align_center
+        c.font = b_titr_bold
+        c.fill = header_fill
 
-        if span_count > 1:
-            for i in range(1, span_count):
-                header_row_days.cells[col_index].merge(
-                    header_row_days.cells[col_index + i]
-                )
+        if periods.count() > 1:
+            ws.merge_cells(
+                start_row=1, start_column=start_col,
+                end_row=1, end_column=end_col
+            )
 
-        col_index += span_count
+        col_index += periods.count()
 
+    # ------------------------
     # ردیف دوم: زنگ‌ها
-    header_row_periods = table.rows[1]
-    header_row_periods.cells[0].text = ""
-
-    col_index = 1
+    # ------------------------
+    col_index = 2
     for day in days:
         for period in day.dayperiod_set.all():
-            header_row_periods.cells[col_index].text = f"زنگ {period.period_number}"
+            c = ws.cell(row=2, column=col_index, value=f"زنگ {period.period_number}")
+            c.alignment = align_center
+            c.font = b_titr_bold
+            c.fill = header_fill
+            c.border = thin_border
             col_index += 1
 
-    # داده‌های کلاس‌ها
-    row_index = 2
-    for school_class in classes:
-        row = table.rows[row_index]
-        row.cells[0].text = f"{school_class.name}"
+    # ------------------------
+    # داده‌ها
+    # ------------------------
+    row_index = 3
+    for teacher in teachers:
+        c0 = ws.cell(row=row_index, column=1, value=teacher.name)
+        c0.alignment = align_right
+        c0.font = b_titr_bold
+        c0.border = thick_left_border
 
-        col_index = 1
-
+        col_index = 2
         for day in days:
             for period in day.dayperiod_set.all():
                 sched = Schedule.objects.filter(
-                    school_class=school_class,
+                    teacher=teacher,
                     day_period=period
-                ).first()
+                ).select_related("school_class").first()
 
-                if sched:
-                    row.cells[col_index].text = f"{sched.lesson.name}\n{sched.teacher.name}"
-                else:
-                    row.cells[col_index].text = "---"
+                cell = ws.cell(row=row_index, column=col_index)
+                cell.alignment = align_center
+                cell.font = b_titr
+                cell.value = sched.school_class.name if sched else "---"
+                cell.border = thin_border
 
                 col_index += 1
 
         row_index += 1
 
+    # ------------------------
+    # 🔥 خط ضخیم بین روزها
+    # ------------------------
+    max_row = ws.max_row
+    for end_col in day_end_columns:
+        for r in range(1, max_row + 1):
+            ws.cell(row=r, column=end_col).border = Border(
+                right=Side(style="thick"),
+                left=ws.cell(row=r, column=end_col).border.left,
+                top=ws.cell(row=r, column=end_col).border.top,
+                bottom=ws.cell(row=r, column=end_col).border.bottom,
+            )
+
+    # ------------------------
+    # Auto width + row height
+    # ------------------------
+    for col_cells in ws.columns:
+        max_length = 0
+        column_letter = None
+        for cell in col_cells:
+            if hasattr(cell, "column_letter") and cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+                if column_letter is None:
+                    column_letter = cell.column_letter
+        if column_letter:
+            ws.column_dimensions[column_letter].width = min(max_length + 4, 28)
+
+    for r in range(1, ws.max_row + 1):
+        ws.row_dimensions[r].height = 28
+
+    # ------------------------
+    # Print Area
+    # ------------------------
+    last_col = ws.max_column
+    last_row = ws.max_row
+    ws.print_area = f"A1:{openpyxl.utils.get_column_letter(last_col)}{last_row}"
+
+    # ------------------------
     response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = 'attachment; filename=barname_kelasi.docx'
-    document.save(response)
-
+    response['Content-Disposition'] = 'attachment; filename=barname_dabiran.xlsx'
+    wb.save(response)
     return response
-
-
 
 def schedule_table(request):
 

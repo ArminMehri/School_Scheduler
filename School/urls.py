@@ -21,7 +21,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.schedule_table, name='schedule_table'),
     path('build-schedule/', views.build_schedule, name='build_schedule'),
-    path('export-word/', views.export_schedule_word, name='export_word'),
     path('export-excel/', views.export_schedule_excel, name='export_excel'),
+    path("export-excel-teacher/", views.export_schedule_excel_teacher, name="export_excel_teacher"),
     path('Logs/', views.schedule_build_view, name='schedule-build'),
 ]
