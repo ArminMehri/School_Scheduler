@@ -59,6 +59,7 @@
       user-select:none;
       transition: .18s ease;
       font-size: 16px;
+      white-space: nowrap;
     }
     .btn-primary{
       background: linear-gradient(90deg, var(--blue2), var(--blue1));
@@ -72,6 +73,12 @@
       color: var(--text);
     }
     .btn-ghost:hover{ background: rgba(255,255,255,.09); }
+    .btn-danger{
+      background: rgba(255,59,59,.15);
+      border-color: rgba(255,59,59,.35);
+      color: #ffd1d1;
+    }
+    .btn-danger:hover{ background: rgba(255,59,59,.22); }
 
     /* Fields */
     form{margin-top: 14px;}
@@ -92,6 +99,7 @@
       color: var(--text);
       outline:none;
       font-size: 16px;
+      box-sizing: border-box;
     }
     textarea{min-height:110px;}
 
@@ -146,6 +154,7 @@
       margin-top: 8px;
       line-height: 1.8;
     }
+    ul.errorlist{margin:8px 0 0; padding:0 18px; color:#ffd1d1;}
     .help{
       color: rgba(255,255,255,.55);
       margin-top: 6px;
@@ -157,9 +166,10 @@
       gap:12px;
       margin-top:18px;
       flex-wrap:wrap;
+      align-items:center;
     }
 
-    /* Formset box */
+    /* Formsets */
     .formset-box{
       margin-top: 18px;
       padding: 16px;
@@ -167,20 +177,36 @@
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(10,18,40,.28);
     }
+    .formset-head{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
     .formset-title{
       font-weight:800;
-      margin: 0 0 10px;
+      margin: 0;
       color: rgba(255,255,255,.9);
     }
+
     .formset-row{
       display:grid;
-      grid-template-columns: 1fr 1fr 140px 90px;
+      grid-template-columns: 1fr 1fr 140px 110px;
       gap: 12px;
       align-items:end;
       padding: 12px 0;
       border-top: 1px solid rgba(255,255,255,.10);
     }
     .formset-row:first-of-type{ border-top: 0; }
+
+    @media (max-width: 820px){
+      .formset-row{
+        grid-template-columns: 1fr;
+      }
+    }
+
     .small label{ font-size: 14px; margin-top: 0; }
     .delete-cell{
       display:flex;
@@ -189,6 +215,15 @@
       gap:10px;
       padding-bottom: 4px;
     }
+    .delete-cell input[type="checkbox"]{
+      width: 18px;
+      height: 18px;
+      margin:0;
+      accent-color: var(--red1);
+      cursor:pointer;
+    }
+
+    .d-none{ display:none !important; }
   </style>
 </head>
 
@@ -198,15 +233,17 @@
       <h1>{{ title }}</h1>
       <div class="sub">{{ subtitle }}</div>
 
+      {% if form.non_field_errors %}
+        <div class="errors">{{ form.non_field_errors }}</div>
+      {% endif %}
+
       <form method="post" id="mainForm" novalidate>
         {% csrf_token %}
 
-        {# ✅ خیلی مهم: hidden fields (مثل id و …) #}
         {% for h in form.hidden_fields %}
           {{ h }}
         {% endfor %}
 
-        {# ✅ رندر فیلدهای اصلی #}
         {% for field in form.visible_fields %}
           <div class="field">
             {% if field.field.widget.input_type == "checkbox" %}
@@ -225,39 +262,81 @@
           </div>
         {% endfor %}
 
-        {# ✅ اگر فرم‌ست داری (TeacherAvailability) اینجا رندر میشه #}
-        {% if formset %}
-          {{ formset.management_form }}
+        {% if formsets %}
+          {% for fs in formsets %}
+            <div class="formset-box"
+                 data-formset-prefix="{{ fs.formset.prefix }}"
+                 id="fsbox-{{ fs.formset.prefix }}">
 
-          <div class="formset-box">
-            <div class="formset-title">{{ formset_title|default:"آیتم‌های مرتبط" }}</div>
+              <div class="formset-head">
+                <h3 class="formset-title">{{ fs.title }}</h3>
+                <button type="button" class="btn btn-ghost js-add-row" data-prefix="{{ fs.formset.prefix }}">
+                  ➕ افزودن ردیف
+                </button>
+              </div>
 
-            {% for f in formset.forms %}
-              {# hidden های هر فرم‌ست #}
-              {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+              {{ fs.formset.management_form }}
 
-              <div class="formset-row">
-                {% for field in f.visible_fields %}
-                  {% if field.name == "DELETE" %}
+              <div class="js-rows" id="rows-{{ fs.formset.prefix }}">
+                {% for f in fs.formset.forms %}
+                  <div class="formset-row js-row">
+                    {# ✅ hidden های هر فرم داخل خود ردیف #}
+                    {% for h in f.hidden_fields %}{{ h }}{% endfor %}
+
+                    {% for fld in f.visible_fields %}
+                      {% if fld.name == "DELETE" %}
+                        <div class="delete-cell">
+                          {{ fld }}
+                          <span class="check-label">حذف</span>
+                        </div>
+                      {% else %}
+                        <div class="small">
+                          <label for="{{ fld.id_for_label }}">{{ fld.label }}</label>
+                          {{ fld }}
+                          {% if fld.errors %}<div class="errors">{{ fld.errors }}</div>{% endif %}
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+
                     <div class="delete-cell">
-                      {{ field }}
-                      <span class="check-label">حذف</span>
+                      <button type="button" class="btn btn-danger js-remove-row">🗑️ حذف ردیف</button>
                     </div>
-                  {% else %}
-                    <div class="small">
-                      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                      {{ field }}
-                      {% if field.errors %}<div class="errors">{{ field.errors }}</div>{% endif %}
-                    </div>
-                  {% endif %}
+                  </div>
                 {% endfor %}
               </div>
-            {% endfor %}
 
-            <div class="help" style="margin-top:10px">
-              برای حذف یک ردیف، تیک «حذف» را بزن و ذخیره کن.
+              <div class="d-none js-empty-form" id="empty-{{ fs.formset.prefix }}">
+                {% with ef=fs.formset.empty_form %}
+                  <div class="formset-row js-row">
+                    {# ✅ hidden های empty_form هم داخل ردیف #}
+                    {% for h in ef.hidden_fields %}{{ h }}{% endfor %}
+
+                    {% for fld in ef.visible_fields %}
+                      {% if fld.name == "DELETE" %}
+                        <div class="delete-cell">
+                          {{ fld }}
+                          <span class="check-label">حذف</span>
+                        </div>
+                      {% else %}
+                        <div class="small">
+                          <label>{{ fld.label }}</label>
+                          {{ fld }}
+                        </div>
+                      {% endif %}
+                    {% endfor %}
+
+                    <div class="delete-cell">
+                      <button type="button" class="btn btn-danger js-remove-row">🗑️ حذف ردیف</button>
+                    </div>
+                  </div>
+                {% endwith %}
+              </div>
+
+              <div class="help" style="margin-top:10px">
+                برای حذف ردیف‌های قبلی، تیک «حذف» را بزن و ذخیره کن. برای ردیف‌های جدید، دکمه «حذف ردیف» را بزن.
+              </div>
             </div>
-          </div>
+          {% endfor %}
         {% endif %}
 
         <div class="actions">
@@ -285,12 +364,7 @@
       if (m.level.includes("error")) icon = "error";
       if (m.level.includes("warning")) icon = "warning";
 
-      Swal.fire({
-        icon,
-        title: "پیام سیستم",
-        text: m.text,
-        confirmButtonText: "باشه",
-      });
+      Swal.fire({ icon, title: "پیام سیستم", text: m.text, confirmButtonText: "باشه" });
     }
   })();
 
@@ -318,6 +392,77 @@
           form.submit();
         }
       });
+    });
+  })();
+
+  // ✅ Dynamic add/remove rows for Django formsets
+  (function(){
+    function getTotalEl(prefix){
+      return document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+    }
+
+    function addRow(prefix) {
+      const rowsWrap = document.getElementById("rows-" + prefix);
+      const emptyWrap = document.getElementById("empty-" + prefix);
+      const totalEl = getTotalEl(prefix);
+      if (!rowsWrap || !emptyWrap || !totalEl) return;
+
+      const total = parseInt(totalEl.value || "0", 10);
+
+      let html = emptyWrap.innerHTML;
+      html = html.replace(/__prefix__/g, String(total));
+
+      const tmp = document.createElement("div");
+      tmp.innerHTML = html.trim();
+
+      // ✅ همیشه خود ردیف را بردار (نه اولین بچه)
+      const row = tmp.querySelector(".js-row");
+      if (!row) return;
+
+      row.dataset.isNew = "1";
+      rowsWrap.appendChild(row);
+
+      totalEl.value = String(total + 1);
+    }
+
+    function removeRow(btn) {
+      const row = btn.closest(".js-row");
+      if (!row) return;
+
+      // اگر رکورد قدیمی است: DELETE را تیک بزن و مخفی کن
+      const delInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+      if (delInput && !row.dataset.isNew) {
+        delInput.checked = true;
+        row.style.display = "none";
+        return;
+      }
+
+      // اگر جدید است: حذف و TOTAL_FORMS را کم کن
+      const box = btn.closest("[data-formset-prefix]");
+      const prefix = box ? box.getAttribute("data-formset-prefix") : null;
+      if (!prefix) {
+        row.remove();
+        return;
+      }
+
+      const totalEl = getTotalEl(prefix);
+      if (totalEl) {
+        const total = parseInt(totalEl.value || "0", 10);
+        totalEl.value = String(Math.max(total - 1, 0));
+      }
+
+      row.remove();
+    }
+
+    document.addEventListener("click", function(e){
+      const addBtn = e.target.closest(".js-add-row");
+      if (addBtn) {
+        const prefix = addBtn.getAttribute("data-prefix");
+        if (prefix) addRow(prefix);
+      }
+
+      const rmBtn = e.target.closest(".js-remove-row");
+      if (rmBtn) removeRow(rmBtn);
     });
   })();
 </script>

@@ -1,5 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
+
 from main.models import (
     Grade, SchoolDay, DayPeriod,
     SchoolClass, Lesson, Teacher, TeacherAvailability,
@@ -33,14 +34,41 @@ BASE_TEXTAREA = (
 
 BASE_CHECK = "h-5 w-5 rounded border-white/20 bg-white/10 text-blue-500"
 
-class GradeForm(forms.ModelForm):
+
+class SchoolScopedModelForm(forms.ModelForm):
+    """Form base: اگر مدرسه دادیم، queryset فیلدهای FK/M2M مدرسه‌ای می‌شود."""
+
+    def __init__(self, *args, school=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.school = school
+        if school is not None:
+            self._apply_school_scope(school)
+
+    def _apply_school_scope(self, school):
+        for _, field in self.fields.items():
+            qs = getattr(field, "queryset", None)
+            if qs is None:
+                continue
+            model = getattr(qs, "model", None)
+            if model is None:
+                continue
+            try:
+                if "school" in [f.name for f in model._meta.fields]:
+                    field.queryset = qs.filter(school=school)
+            except Exception:
+                pass
+
+
+class GradeForm(SchoolScopedModelForm):
     class Meta:
         model = Grade
         fields = ["name"]
-        widgets = {"name": forms.TextInput(attrs={"class": BASE_INPUT, "placeholder": "مثلا هفتم"})}
+        widgets = {
+            "name": forms.TextInput(attrs={"class": BASE_INPUT, "placeholder": "مثلا هفتم"})
+        }
 
 
-class SchoolDayForm(forms.ModelForm):
+class SchoolDayForm(SchoolScopedModelForm):
     class Meta:
         model = SchoolDay
         fields = ["name", "is_active"]
@@ -50,7 +78,7 @@ class SchoolDayForm(forms.ModelForm):
         }
 
 
-class DayPeriodForm(forms.ModelForm):
+class DayPeriodForm(SchoolScopedModelForm):
     class Meta:
         model = DayPeriod
         fields = ["day", "period_number"]
@@ -60,7 +88,7 @@ class DayPeriodForm(forms.ModelForm):
         }
 
 
-class SchoolClassForm(forms.ModelForm):
+class SchoolClassForm(SchoolScopedModelForm):
     class Meta:
         model = SchoolClass
         fields = ["name", "grade"]
@@ -70,7 +98,7 @@ class SchoolClassForm(forms.ModelForm):
         }
 
 
-class LessonForm(forms.ModelForm):
+class LessonForm(SchoolScopedModelForm):
     class Meta:
         model = Lesson
         fields = [
@@ -88,7 +116,7 @@ class LessonForm(forms.ModelForm):
         }
 
 
-class TeacherForm(forms.ModelForm):
+class TeacherForm(SchoolScopedModelForm):
     class Meta:
         model = Teacher
         fields = ["name", "weekly_capacity", "lessons", "limit_to_grades", "grades"]
@@ -101,7 +129,7 @@ class TeacherForm(forms.ModelForm):
         }
 
 
-class TeacherAvailabilityForm(forms.ModelForm):
+class TeacherAvailabilityForm(SchoolScopedModelForm):
     class Meta:
         model = TeacherAvailability
         fields = ["teacher", "day", "available_hours"]
@@ -112,14 +140,14 @@ class TeacherAvailabilityForm(forms.ModelForm):
         }
 
 
-class TeachingAssignmentForm(forms.ModelForm):
+class TeachingAssignmentForm(SchoolScopedModelForm):
     class Meta:
         model = TeachingAssignment
         fields = ["teacher"]
         widgets = {"teacher": forms.Select(attrs={"class": BASE_SELECT})}
 
 
-class TeachingAssignmentItemForm(forms.ModelForm):
+class TeachingAssignmentItemForm(SchoolScopedModelForm):
     class Meta:
         model = TeachingAssignmentItem
         fields = ["assignment", "school_class", "lesson", "weekly_hours"]
@@ -129,10 +157,22 @@ class TeachingAssignmentItemForm(forms.ModelForm):
             "lesson": forms.Select(attrs={"class": BASE_SELECT}),
             "weekly_hours": forms.NumberInput(attrs={"class": BASE_INPUT, "min": 0}),
         }
+
+
 TeacherAvailabilityFormSet = inlineformset_factory(
     parent_model=Teacher,
     model=TeacherAvailability,
+    form=TeacherAvailabilityForm,
     fields=("day", "available_hours"),
+    extra=1,
+    can_delete=True,
+)
+
+TeachingItemInlineFormSet = inlineformset_factory(
+    parent_model=TeachingAssignment,
+    model=TeachingAssignmentItem,
+    form=TeachingAssignmentItemForm,
+    fields=("school_class", "lesson", "weekly_hours"),
     extra=1,
     can_delete=True,
 )

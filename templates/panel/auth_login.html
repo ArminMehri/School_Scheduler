@@ -53,7 +53,10 @@
       color:var(--text);
       outline:none;
       font-size:16px;
+      box-sizing:border-box;
     }
+    input::placeholder{ color: rgba(255,255,255,.45); }
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center; gap:10px;
       border-radius:999px; padding:12px 18px;
@@ -92,18 +95,17 @@
     <h1>ورود به پنل</h1>
     <div class="sub">برای مدیریت اطلاعات مدرسه و ساخت برنامه وارد شوید.</div>
 
-    {% if form.non_field_errors %}
-      <div class="errors">{{ form.non_field_errors }}</div>
-    {% endif %}
-
     <form method="post" id="loginForm" novalidate>
       {% csrf_token %}
 
       <label for="id_username">نام کاربری</label>
-      {{ form.username }}
+      <input id="id_username" name="username" type="text" autocomplete="username" required
+             value="{{ request.POST.username|default:'' }}"
+             placeholder="نام کاربری" />
 
       <label for="id_password">رمز عبور</label>
-      {{ form.password }}
+      <input id="id_password" name="password" type="password" autocomplete="current-password" required
+             placeholder="رمز عبور" />
 
       <button class="btn btn-primary" type="submit">🔐 ورود</button>
     </form>
@@ -115,7 +117,6 @@
   </div>
 
 <script>
-  // SweetAlert برای پیام‌های Django
   (function(){
     const msgs = [];
     {% if messages %}

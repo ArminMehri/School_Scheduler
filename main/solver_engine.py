@@ -7,9 +7,9 @@ from main.models import (
     DayPeriod,
     TeacherAvailability,
 )
+from main.services.progress import update_progress
 
-
-def generate_schedule_with_ortools(max_time_seconds=60):
+def generate_schedule_with_ortools(max_time_seconds=60, school=None):
     """
     خروجی: list[str] لاگ‌ها
 
@@ -27,6 +27,10 @@ def generate_schedule_with_ortools(max_time_seconds=60):
     - سافت: تا حد امکان دبیر وسط روز بیکار (گپ) نماند
     """
 
+    if school is None:
+        raise Exception("school مشخص نیست. generate_schedule_with_ortools(school=...) را صدا بزنید.")
+    update_progress(school, 1, "شروع ساخت برنامه…")
+
     logs = []
     model = cp_model.CpModel()
 
@@ -34,13 +38,13 @@ def generate_schedule_with_ortools(max_time_seconds=60):
     # Slots
     # ----------------------------
     slots = list(
-        DayPeriod.objects.filter(day__is_active=True)
+        DayPeriod.objects.filter(school=school, day__is_active=True)
         .select_related("day")
         .order_by("day__id", "period_number")
     )
     if not slots:
         raise Exception("هیچ زنگ فعالی تعریف نشده است.")
-
+    update_progress(school, 10, f"زنگ‌ها آماده شد: {len(slots)} اسلات")
     slot_by_id = {s.id: s for s in slots}
 
     days = sorted(list({s.day for s in slots}), key=lambda d: d.id)
@@ -64,14 +68,14 @@ def generate_schedule_with_ortools(max_time_seconds=60):
     # Items (TeachingAssignmentItem)
     # ----------------------------
     items = list(
-        TeachingAssignmentItem.objects.select_related(
+        TeachingAssignmentItem.objects.filter(school=school).select_related(
             "lesson", "school_class", "assignment__teacher"
         )
     )
     if not items:
         logs.append("⚠ هیچ TeachingAssignmentItem وجود ندارد.")
         return logs
-
+    update_progress(school, 20, f"آیتم‌های تدریس آماده شد: {len(items)} مورد")
     classes = sorted(list({i.school_class for i in items}), key=lambda c: c.id)
 
     # ----------------------------
@@ -79,7 +83,7 @@ def generate_schedule_with_ortools(max_time_seconds=60):
     # teacher_avail[teacher_id][day_id] = available_hours
     # ----------------------------
     teacher_avail = defaultdict(dict)
-    for av in TeacherAvailability.objects.select_related("teacher", "day"):
+    for av in TeacherAvailability.objects.filter(school=school).select_related("teacher", "day"):
         teacher_avail[av.teacher_id][av.day_id] = av.available_hours
 
     # ----------------------------
@@ -95,7 +99,7 @@ def generate_schedule_with_ortools(max_time_seconds=60):
             x[(it.id, sl.id)] = model.NewBoolVar(f"x_{it.id}_{sl.id}")
             t[(it.id, sl.id)] = model.NewBoolVar(f"t_{it.id}_{sl.id}")
             model.Add(t[(it.id, sl.id)] <= x[(it.id, sl.id)])  # اگر درس نیفتاد، دبیر هم نمی‌افتد
-
+    update_progress(school, 35, "متغیرهای تصمیم ساخته شد")
     # ----------------------------
     # HARD 1: هر کلاس در هر اسلات دقیقاً 1 درس
     # ----------------------------
@@ -109,6 +113,7 @@ def generate_schedule_with_ortools(max_time_seconds=60):
     # ----------------------------
     for it in items:
         model.Add(sum(x[(it.id, sl.id)] for sl in slots) == it.weekly_hours)
+    update_progress(school, 45, "قیود سخت اعمال شد")
 
     # ----------------------------
     # Teacher constraints (با t)
@@ -234,13 +239,13 @@ def generate_schedule_with_ortools(max_time_seconds=60):
 
             model.Add(sum(single_flag.values()) == 1)
 
-            # سافت: تک‌زنگ بهتره آخر روز باشد
-            for d in days:
-                ordered = day_slots[d]
-                if not ordered:
-                    continue
-                last = ordered[-1]
-                score_terms.append(2 * single_flag[last.id])
+            # # سافت: تک‌زنگ بهتره آخر روز باشد
+            # for d in days:
+            #     ordered = day_slots[d]
+            #     if not ordered:
+            #         continue
+            #     last = ordered[-1]
+            #     score_terms.append(2 * single_flag[last.id])
 
             # سافت: تک‌زنگ بهتره کنار paired باشد
             paired_lessons = list(it.lesson.paired_lessons.all())
@@ -322,13 +327,23 @@ def generate_schedule_with_ortools(max_time_seconds=60):
                 score_terms.append(1 * x[(it.id, sl.id)])
 
     # ----------------------------
-    # SOFT: تا حد امکان "دبیر وسط روز بیکار نمونه"
-    # ایده:
-    # - برای هر معلم، اگر دو زنگ پشت‌سرهم تدریس داشته باشد => امتیاز +
-    # - اگر یک زنگ تک افتاده باشد (قبل و بعدش خالی) => امتیاز -
-    # - اگر الگوی گپ 1 تایی (کار-خالی-کار) باشد => امتیاز -
+    # SOFT: تا حد امکان "دبیر وسط روز بیکار نمونه" (سخت‌گیری بیشتر)
+    # ایده‌ها:
+    # - پاداش برای زنگ‌های پشت سر هم
+    # - جریمه شدید برای زنگِ ایزوله (قبل/بعدش خالی)
+    # - جریمه برای گپ 1تایی: کار-خالی-کار
+    # - جریمه برای گپ 2تایی: کار-خالی-خالی-کار
+    # - جریمه برای شروعِ چند بلوک کاری در یک روز (کم کردن تعداد تکه‌های جدا)
     # ----------------------------
-    # ساخت work[teacher, slot] = sum(t items for that teacher in that slot) (۰/۱)
+
+    # وزن‌ها (اینا رو می‌تونی بعداً بازی کنی)
+    W_ADJ = 12  # پاداش چسبیده بودن
+    W_ISO = 45  # جریمه ایزوله (خیلی مهم)
+    W_GAP1 = 35  # جریمه کار-خالی-کار
+    W_GAP2 = 22  # جریمه کار-خالی-خالی-کار
+    W_START = 18  # جریمه شروع بلوک کاری (هرچه بیشتر، پراکندگی بیشتر)
+
+    # work[teacher, slot] = 1 اگر آن دبیر واقعاً در آن اسلات تدریس داشته باشد (t-based)
     work = {}
     for teacher in teachers:
         teacher_items = [it for it in items if it.assignment.teacher_id == teacher.id]
@@ -338,46 +353,82 @@ def generate_schedule_with_ortools(max_time_seconds=60):
             model.Add(sum(t[(it.id, sl.id)] for it in teacher_items) == 0).OnlyEnforceIf(w.Not())
             work[(teacher.id, sl.id)] = w
 
-    # adjacency reward + isolated/gap penalty
+    # adjacency reward + isolated/gap penalties + block-start penalties
     for teacher in teachers:
         for d in days:
             ordered = day_slots[d]
+            if not ordered:
+                continue
+
+            # --- جریمه تعداد بلوک‌ها: start = 1 وقتی کار شروع می‌شود (۰->۱)
+            day_starts = []
+            for i, sl in enumerate(ordered):
+                w = work[(teacher.id, sl.id)]
+
+                if i == 0:
+                    # اگر اولین اسلات روز کار باشد، یک start حساب می‌شود
+                    st = model.NewBoolVar(f"start_{teacher.id}_{d.id}_{sl.id}")
+                    model.Add(st == w)
+                    day_starts.append(st)
+                else:
+                    prev_w = work[(teacher.id, ordered[i - 1].id)]
+                    st = model.NewBoolVar(f"start_{teacher.id}_{d.id}_{sl.id}")
+                    # st = w AND (NOT prev_w)
+                    model.AddBoolAnd([w, prev_w.Not()]).OnlyEnforceIf(st)
+                    model.AddBoolOr([w.Not(), prev_w]).OnlyEnforceIf(st.Not())
+                    day_starts.append(st)
+
+            # هر start یعنی یک بلوک جدید → جریمه
+            for st in day_starts:
+                score_terms.append(-W_START * st)
+
+            # --- پاداش چسبیدن + جریمه ایزوله + گپ‌ها
             for i, sl in enumerate(ordered):
                 w = work[(teacher.id, sl.id)]
 
                 prev_w = work[(teacher.id, ordered[i - 1].id)] if i > 0 else None
                 next_w = work[(teacher.id, ordered[i + 1].id)] if i < len(ordered) - 1 else None
 
-                # reward consecutive (w & next_w)
+                # پاداش consecutive: w & next_w
                 if next_w is not None:
                     both = model.NewBoolVar(f"adj_{teacher.id}_{sl.id}")
                     model.AddBoolAnd([w, next_w]).OnlyEnforceIf(both)
                     model.AddBoolOr([w.Not(), next_w.Not()]).OnlyEnforceIf(both.Not())
-                    score_terms.append(10 * both)  # امتیاز برای چسبیده بودن
+                    score_terms.append(W_ADJ * both)
 
-                # penalty isolated: w=1 و prev=0 و next=0
+                # جریمه ایزوله: w=1 و prev=0 و next=0
                 if prev_w is not None and next_w is not None:
                     iso = model.NewBoolVar(f"iso_{teacher.id}_{sl.id}")
                     model.AddBoolAnd([w, prev_w.Not(), next_w.Not()]).OnlyEnforceIf(iso)
                     model.AddBoolOr([w.Not(), prev_w, next_w]).OnlyEnforceIf(iso.Not())
-                    score_terms.append(-18 * iso)
+                    score_terms.append(-W_ISO * iso)
 
-                # penalty gap pattern: work-0-work  (i, i+1, i+2)
+                # جریمه gap1: work - 0 - work
                 if i < len(ordered) - 2:
                     w1 = work[(teacher.id, ordered[i].id)]
                     w2 = work[(teacher.id, ordered[i + 1].id)]
                     w3 = work[(teacher.id, ordered[i + 2].id)]
-                    gap = model.NewBoolVar(f"gap1_{teacher.id}_{ordered[i].id}")
-                    model.AddBoolAnd([w1, w2.Not(), w3]).OnlyEnforceIf(gap)
-                    model.AddBoolOr([w1.Not(), w2, w3.Not()]).OnlyEnforceIf(gap.Not())
-                    score_terms.append(-14 * gap)
+                    gap1 = model.NewBoolVar(f"gap1_{teacher.id}_{ordered[i].id}")
+                    model.AddBoolAnd([w1, w2.Not(), w3]).OnlyEnforceIf(gap1)
+                    model.AddBoolOr([w1.Not(), w2, w3.Not()]).OnlyEnforceIf(gap1.Not())
+                    score_terms.append(-W_GAP1 * gap1)
+
+                # جریمه gap2: work - 0 - 0 - work
+                if i < len(ordered) - 3:
+                    w1 = work[(teacher.id, ordered[i].id)]
+                    w2 = work[(teacher.id, ordered[i + 1].id)]
+                    w3 = work[(teacher.id, ordered[i + 2].id)]
+                    w4 = work[(teacher.id, ordered[i + 3].id)]
+                    gap2 = model.NewBoolVar(f"gap2_{teacher.id}_{ordered[i].id}")
+                    model.AddBoolAnd([w1, w2.Not(), w3.Not(), w4]).OnlyEnforceIf(gap2)
+                    model.AddBoolOr([w1.Not(), w2, w3, w4.Not()]).OnlyEnforceIf(gap2.Not())
+                    score_terms.append(-W_GAP2 * gap2)
 
     # ----------------------------
-    # SOFT: تا حد امکان دبیر واقعاً ست شود (برای درس‌هایی که اجازه می‌دهند)
+    # SOFT: تا حد امکان دبیر واقعاً ست شود
     # ----------------------------
     for it in items:
         if it.lesson.allow_without_teacher:
-            # اگر امکانش بود t را 1 کن (ولی اجباری نیست)
             for sl in slots:
                 score_terms.append(6 * t[(it.id, sl.id)])
 
@@ -391,17 +442,20 @@ def generate_schedule_with_ortools(max_time_seconds=60):
     # ----------------------------
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = float(max_time_seconds)
-
+    update_progress(school, 55, "در حال حل مسئله (OR-Tools)…")
     status = solver.Solve(model)
 
     if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         raise Exception("هیچ جدول معتبری پیدا نشد.")
-
+    update_progress(school, 75, "حل انجام شد، در حال ذخیره برنامه…")
     # ----------------------------
     # Save
     # ----------------------------
+
+    update_progress(school, 80, "برنامه قبلی پاک شد")
     with transaction.atomic():
-        Schedule.objects.all().delete()
+        Schedule.objects.filter(school=school).delete()
+        update_progress(school, 80, "برنامه قبلی پاک شد")
 
         for it in items:
             teacher = it.assignment.teacher if it.assignment else None
@@ -415,11 +469,13 @@ def generate_schedule_with_ortools(max_time_seconds=60):
                         teacher_to_save = teacher if teacher_used else None
 
                     Schedule.objects.create(
+                        school=school,
                         school_class=it.school_class,
                         day_period=sl,
                         lesson=it.lesson,
                         teacher=teacher_to_save
                     )
-
+    update_progress(school, 98, "ذخیره‌سازی تقریباً تمام شد…")
     logs.append("✅ برنامه با OR-Tools ساخته شد (با رعایت Availability و کاهش گپ دبیرها).")
+    update_progress(school, 100, "✅ برنامه با موفقیت ساخته شد")
     return logs

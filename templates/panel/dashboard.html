@@ -234,13 +234,45 @@
         <!-- ساخت برنامه -->
         <form method="post" action="{% url 'panel_schedule_build' %}" style="display:inline;" data-build>
           {% csrf_token %}
-          <button class="btn btn-green" type="submit">🧠 ساخت برنامه</button>
+          <button class="btn btn-green" type="button" id="buildScheduleBtn">🧠 ساخت برنامه</button>
         </form>
+                <!-- Progress Box -->
+        <div id="scheduleProgressBox" style="display:none; margin-top:14px">
 
+          <div style="
+              background:#e5e7eb;
+              border-radius:10px;
+              overflow:hidden;
+              height:26px;
+          ">
+            <div id="scheduleProgressBar"
+                 style="
+                   width:0%;
+                   height:100%;
+                   background:linear-gradient(90deg,#4f46e5,#22c55e);
+                   color:white;
+                   font-weight:bold;
+                   text-align:center;
+                   line-height:26px;
+                   transition:width .4s ease;
+                 ">
+              0%
+            </div>
+          </div>
+
+          <div id="scheduleProgressText"
+               style="margin-top:6px;font-size:14px;color:#374151">
+            در انتظار شروع…
+          </div>
+
+        </div>
+        <form method="post" action="{% url 'assignment_auto_assign' %}" style="display:inline-block;">
+          {% csrf_token %}
+          <button class="btn btn-green" type="submit">🤖 AutoAssign</button>
+        </form>
         <!-- خروجی‌ها -->
         <a class="btn btn-primary" data-export href="/export-excel/">📗 اکسل (کلاس‌محور)</a>
         <a class="btn btn-primary" data-export href="/export-excel-teacher/">📘 اکسل (دبیرمحور)</a>
-        <a class="btn btn-primary" data-export href="/export-pdf/">🖨️ PDF</a>
 
         <a class="btn btn-ghost" href="{% url 'schedule_list' %}">📌 رفتن به برنامه‌ها</a>
       </div>
@@ -338,6 +370,57 @@
     });
   })();
 </script>
+<script>
+let scheduleProgressTimer = null;
 
+function startScheduleProgress() {
+  const box = document.getElementById("scheduleProgressBox");
+  const bar = document.getElementById("scheduleProgressBar");
+  const text = document.getElementById("scheduleProgressText");
+
+  box.style.display = "block";
+  bar.style.width = "0%";
+  bar.innerText = "0%";
+  text.innerText = "شروع ساخت برنامه…";
+
+  scheduleProgressTimer = setInterval(() => {
+    fetch("{% url 'schedule_progress' %}")
+      .then(r => r.json())
+      .then(data => {
+        bar.style.width = data.percent + "%";
+        bar.innerText = data.percent + "%";
+        text.innerText = data.status;
+
+        if (data.percent >= 100) {
+          clearInterval(scheduleProgressTimer);
+        }
+      })
+      .catch(() => {
+        text.innerText = "خطا در دریافت وضعیت…";
+      });
+  }, 1200);
+}
+
+document.getElementById("buildScheduleBtn").addEventListener("click", function () {
+  Swal.fire({
+    icon: "question",
+    title: "ساخت برنامه؟",
+    text: "برنامه جدید ساخته می‌شود و جایگزین قبلی خواهد شد.",
+    showCancelButton: true,
+    confirmButtonText: "✅ بساز",
+    cancelButtonText: "لغو",
+    reverseButtons: true
+  }).then((res) => {
+    if(!res.isConfirmed) return;
+
+    startScheduleProgress();
+
+    fetch("{% url 'panel_schedule_build' %}", {
+      method: "POST",
+      headers: {"X-CSRFToken": "{{ csrf_token }}"},
+    })
+  });
+});
+</script>
 </body>
 </html>

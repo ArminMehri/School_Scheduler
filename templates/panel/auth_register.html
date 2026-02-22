@@ -44,6 +44,7 @@
     h1{margin:0 0 6px; font-size:28px;}
     .sub{color:var(--muted); margin-bottom:16px; line-height:1.9;}
     label{display:block; color:var(--muted); margin: 12px 0 6px; font-weight:700;}
+
     input{
       width:100%;
       border-radius:16px;
@@ -53,7 +54,27 @@
       color:var(--text);
       outline:none;
       font-size:16px;
+      box-sizing:border-box;
     }
+    input::placeholder{ color: rgba(255,255,255,.45); }
+
+    /* فقط برای مرتب شدن بخش مدرسه (تم دست نخورده) */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field{min-width:0;}
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,.12);
+      margin: 14px 0 6px;
+      border-radius:999px;
+    }
+    @media (max-width: 520px){
+      .grid{grid-template-columns:1fr;}
+    }
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center; gap:10px;
       border-radius:999px; padding:12px 18px;
@@ -69,12 +90,14 @@
       margin-top:16px;
     }
     .btn-primary:hover{ transform: translateY(-1px); filter:brightness(1.03); }
+
     .row{
       display:flex; justify-content:space-between; align-items:center;
       gap:12px; margin-top:14px; flex-wrap:wrap;
     }
     .link{color:rgba(255,255,255,.85); text-decoration:none; font-weight:700;}
     .link:hover{ text-decoration:underline; }
+
     .errors{
       color:#ffd1d1;
       background: rgba(255,0,0,.10);
@@ -84,7 +107,6 @@
       margin-top: 10px;
       line-height: 1.9;
     }
-    ul.errorlist{margin:8px 0 0; padding:0 18px; color:#ffd1d1;}
   </style>
 </head>
 
@@ -93,24 +115,62 @@
     <h1>ثبت‌نام</h1>
     <div class="sub">یک حساب بساز تا وارد پنل برنامه‌ساز بشی.</div>
 
-    {% if form.non_field_errors %}
-      <div class="errors">{{ form.non_field_errors }}</div>
-    {% endif %}
-
     <form method="post" novalidate>
       {% csrf_token %}
 
-      <label for="id_username">نام کاربری</label>
-      {{ form.username }}
-      {% if form.username.errors %}<div class="errors">{{ form.username.errors }}</div>{% endif %}
+      <!-- اطلاعات مدرسه -->
+      <div class="grid">
+        <div class="field">
+          <label for="id_school_name">نام مدرسه</label>
+          <input id="id_school_name" name="school_name" type="text" required
+                 value="{{ request.POST.school_name|default:'' }}"
+                 placeholder="مثلاً دبیرستان شهید بهشتی" />
+        </div>
 
-      <label for="id_password1">رمز عبور</label>
-      {{ form.password1 }}
-      {% if form.password1.errors %}<div class="errors">{{ form.password1.errors }}</div>{% endif %}
+        <div class="field">
+          <label for="id_school_code">کد آموزشگاه</label>
+          <input id="id_school_code" name="school_code" type="text" required
+                 value="{{ request.POST.school_code|default:'' }}"
+                 placeholder="مثلاً 123456" />
+        </div>
+
+        <div class="field">
+          <label for="id_education_level">مقطع تحصیلی</label>
+          <input id="id_education_level" name="education_level" type="text" required
+                 value="{{ request.POST.education_level|default:'' }}"
+                 placeholder="مثلاً متوسطه دوم" />
+        </div>
+
+        <div class="field">
+          <label for="id_manager_mobile">موبایل مدیر</label>
+          <input id="id_manager_mobile" name="manager_mobile" type="tel" inputmode="tel" required
+                 value="{{ request.POST.manager_mobile|default:'' }}"
+                 placeholder="مثلاً 09123456789" />
+        </div>
+
+        <div class="field" style="grid-column:1 / -1;">
+          <label for="id_manager_full_name">نام و نام خانوادگی مدیر</label>
+          <input id="id_manager_full_name" name="manager_full_name" type="text" required
+                 value="{{ request.POST.manager_full_name|default:'' }}"
+                 placeholder="مثلاً علی محمدی" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- اطلاعات کاربری (همون چیزی که ویوت می‌خونه) -->
+      <label for="id_username">نام کاربری</label>
+      <input id="id_username" name="username" type="text" autocomplete="username" required
+             value="{{ request.POST.username|default:'' }}"
+             placeholder="نام کاربری دلخواه" />
+
+      <label for="id_password">رمز عبور</label>
+      <input id="id_password" name="password" type="password" autocomplete="new-password" required
+             placeholder="رمز عبور" />
 
       <label for="id_password2">تکرار رمز عبور</label>
-      {{ form.password2 }}
-      {% if form.password2.errors %}<div class="errors">{{ form.password2.errors }}</div>{% endif %}
+      <input id="id_password2" name="password2" type="password" autocomplete="new-password" required
+             placeholder="تکرار رمز عبور" />
 
       <button class="btn btn-primary" type="submit">✅ ثبت‌نام</button>
     </form>

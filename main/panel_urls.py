@@ -17,7 +17,7 @@ urlpatterns = [
     # Exports
     path("export/excel/classes/", v.export_excel_classes, name="export_excel_classes"),
     path("export/excel/teachers/", v.export_excel_teachers, name="export_excel_teachers"),
-
+    path("assignments/auto-assign/", v.assignment_auto_assign, name="assignment_auto_assign"),
     # Grades
     path("grades/", v.grade_list, name="grade_list"),
     path("grades/add/", v.grade_create, name="grade_create"),
