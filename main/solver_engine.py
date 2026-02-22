@@ -239,13 +239,10 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None, strict_teac
 
             model.Add(sum(single_flag.values()) == 1)
 
-            # # سافت: تک‌زنگ بهتره آخر روز باشد
-            # for d in days:
-            #     ordered = day_slots[d]
-            #     if not ordered:
-            #         continue
-            #     last = ordered[-1]
-            #     score_terms.append(2 * single_flag[last.id])
+            # HARD: تک‌زنگِ paired فقط اول یا آخر روز مجاز است (وسط روز ممنوع)
+            if len(ordered) >= 3:
+                for mid in ordered[1:-1]:
+                    model.Add(single_flag[mid.id] == 0)
 
             # سافت: تک‌زنگ بهتره کنار paired باشد
             paired_lessons = list(it.lesson.paired_lessons.all())
@@ -278,8 +275,6 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None, strict_teac
                             together = model.NewBoolVar(f"single_with_pair_{it.id}_{sl.id}")
                             model.AddBoolAnd([single_flag[sl.id], neigh_has]).OnlyEnforceIf(together)
                             model.AddBoolOr([single_flag[sl.id].Not(), neigh_has.Not()]).OnlyEnforceIf(together.Not())
-                            # HARD: اگر این slot تک‌زنگ شد، حتماً باید کنار paired خودش باشد
-                            model.Add(neigh_has == 1).OnlyEnforceIf(single_flag[sl.id])
                             # HARD: اگر این slot تک‌زنگ شد، حتماً باید کنار paired خودش باشد
                             model.Add(neigh_has == 1).OnlyEnforceIf(single_flag[sl.id])
                             score_terms.append(3 * together)
@@ -402,11 +397,13 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None, strict_teac
                     model.AddBoolOr([w.Not(), prev_w, next_w]).OnlyEnforceIf(iso.Not())
                     score_terms.append(-W_ISO * iso)
 
-                # جریمه gap1: work - 0 - work
+                # HARD + SOFT برای gap1: work - 0 - work
                 if i < len(ordered) - 2:
                     w1 = work[(teacher.id, ordered[i].id)]
                     w2 = work[(teacher.id, ordered[i + 1].id)]
                     w3 = work[(teacher.id, ordered[i + 2].id)]
+                    # HARD: یک اسلات خالی وسطِ دو کلاس دبیر غیرمجاز
+                    model.AddBoolOr([w1.Not(), w2, w3.Not()])
                     gap1 = model.NewBoolVar(f"gap1_{teacher.id}_{ordered[i].id}")
                     model.AddBoolAnd([w1, w2.Not(), w3]).OnlyEnforceIf(gap1)
                     model.AddBoolOr([w1.Not(), w2, w3.Not()]).OnlyEnforceIf(gap1.Not())
