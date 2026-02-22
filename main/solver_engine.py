@@ -279,6 +279,9 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None):
                             model.AddBoolAnd([single_flag[sl.id], neigh_has]).OnlyEnforceIf(together)
                             model.AddBoolOr([single_flag[sl.id].Not(), neigh_has.Not()]).OnlyEnforceIf(together.Not())
 
+                            # HARD: اگر این slot تک‌زنگ شد، حتماً باید کنار paired خودش باشد
+                            model.Add(neigh_has == 1).OnlyEnforceIf(single_flag[sl.id])
+
                             score_terms.append(3 * together)
 
         # HARD: 2+2 در یک روز ممنوع => start2 در هر روز <= 1
@@ -319,14 +322,6 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None):
                 score_terms.append(-8 * both)
 
     # ----------------------------
-    # SOFT: ترجیح زنگ‌های اول روز (1-3)
-    # ----------------------------
-    for it in items:
-        for sl in slots:
-            if sl.period_number <= 3:
-                score_terms.append(1 * x[(it.id, sl.id)])
-
-    # ----------------------------
     # SOFT: تا حد امکان "دبیر وسط روز بیکار نمونه" (سخت‌گیری بیشتر)
     # ایده‌ها:
     # - پاداش برای زنگ‌های پشت سر هم
@@ -342,6 +337,7 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None):
     W_GAP1 = 35  # جریمه کار-خالی-کار
     W_GAP2 = 22  # جریمه کار-خالی-خالی-کار
     W_START = 18  # جریمه شروع بلوک کاری (هرچه بیشتر، پراکندگی بیشتر)
+    W_TRIPLE = 120  # جریمه خیلی زیاد برای 3 اسلات کاری پشت‌سرهم
 
     # work[teacher, slot] = 1 اگر آن دبیر واقعاً در آن اسلات تدریس داشته باشد (t-based)
     work = {}
@@ -423,6 +419,33 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None):
                     model.AddBoolAnd([w1, w2.Not(), w3.Not(), w4]).OnlyEnforceIf(gap2)
                     model.AddBoolOr([w1.Not(), w2, w3, w4.Not()]).OnlyEnforceIf(gap2.Not())
                     score_terms.append(-W_GAP2 * gap2)
+
+                # جریمه خیلی زیاد: 3 کلاس پشت‌سرهم برای دبیر
+                if i < len(ordered) - 2:
+                    w1 = work[(teacher.id, ordered[i].id)]
+                    w2 = work[(teacher.id, ordered[i + 1].id)]
+                    w3 = work[(teacher.id, ordered[i + 2].id)]
+                    triple = model.NewBoolVar(f"triple_{teacher.id}_{ordered[i].id}")
+                    model.AddBoolAnd([w1, w2, w3]).OnlyEnforceIf(triple)
+                    model.AddBoolOr([w1.Not(), w2.Not(), w3.Not()]).OnlyEnforceIf(triple.Not())
+                    score_terms.append(-W_TRIPLE * triple)
+
+            # HARD: پنجره بیشتر از 4 اسلات بین دو کلاس دبیر ممنوع
+            # یعنی الگوی work ... (حداقل 5 اسلات بدون کار) ... work مجاز نیست
+            for i in range(len(ordered)):
+                for j in range(i + 6, len(ordered)):
+                    middle = [work[(teacher.id, ordered[k].id)] for k in range(i + 1, j)]
+                    no_middle_work = model.NewBoolVar(
+                        f"no_mid_work_{teacher.id}_{d.id}_{ordered[i].id}_{ordered[j].id}"
+                    )
+                    model.AddBoolAnd([m.Not() for m in middle]).OnlyEnforceIf(no_middle_work)
+                    model.AddBoolOr(middle).OnlyEnforceIf(no_middle_work.Not())
+
+                    model.AddBoolOr([
+                        work[(teacher.id, ordered[i].id)].Not(),
+                        work[(teacher.id, ordered[j].id)].Not(),
+                        no_middle_work.Not(),
+                    ])
 
     # ----------------------------
     # SOFT: تا حد امکان دبیر واقعاً ست شود
