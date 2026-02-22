@@ -319,14 +319,6 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None):
                 score_terms.append(-8 * both)
 
     # ----------------------------
-    # SOFT: ترجیح زنگ‌های اول روز (1-3)
-    # ----------------------------
-    for it in items:
-        for sl in slots:
-            if sl.period_number <= 3:
-                score_terms.append(1 * x[(it.id, sl.id)])
-
-    # ----------------------------
     # SOFT: تا حد امکان "دبیر وسط روز بیکار نمونه" (سخت‌گیری بیشتر)
     # ایده‌ها:
     # - پاداش برای زنگ‌های پشت سر هم
@@ -424,6 +416,23 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None):
                     model.AddBoolOr([w1.Not(), w2, w3, w4.Not()]).OnlyEnforceIf(gap2.Not())
                     score_terms.append(-W_GAP2 * gap2)
 
+            # HARD: پنجره بیشتر از 4 اسلات بین دو کلاس دبیر ممنوع
+            # یعنی الگوی work ... (حداقل 5 اسلات بدون کار) ... work مجاز نیست
+            for i in range(len(ordered)):
+                for j in range(i + 6, len(ordered)):
+                    middle = [work[(teacher.id, ordered[k].id)] for k in range(i + 1, j)]
+                    no_middle_work = model.NewBoolVar(
+                        f"no_mid_work_{teacher.id}_{d.id}_{ordered[i].id}_{ordered[j].id}"
+                    )
+                    model.AddBoolAnd([m.Not() for m in middle]).OnlyEnforceIf(no_middle_work)
+                    model.AddBoolOr(middle).OnlyEnforceIf(no_middle_work.Not())
+
+                    model.AddBoolOr([
+                        work[(teacher.id, ordered[i].id)].Not(),
+                        work[(teacher.id, ordered[j].id)].Not(),
+                        no_middle_work.Not(),
+                    ])
+
     # ----------------------------
     # SOFT: تا حد امکان دبیر واقعاً ست شود
     # ----------------------------
@@ -455,7 +464,7 @@ def generate_schedule_with_ortools(max_time_seconds=60, school=None):
     update_progress(school, 80, "برنامه قبلی پاک شد")
     with transaction.atomic():
         Schedule.objects.filter(school=school).delete()
-        update_progress(school, 80, "برنامه قبلی پاک شد")
+        update_progress(school, 80, "برنامه قبلی پا شد")
 
         for it in items:
             teacher = it.assignment.teacher if it.assignment else None
