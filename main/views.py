@@ -51,7 +51,12 @@ def _require_school(request):
 
 
 def site_index(request):
-    return render(request, "index.html")
+    index_title = announce.objects.all().first()
+    context = {
+        'index_title': index_title,
+    }
+
+    return render(request, "index.html",context)
 
 
 def export_schedule_excel(request):
@@ -441,7 +446,8 @@ def panel_logout(request):
     return redirect("panel_login")
 
 from django.http import JsonResponse
-from main.models import ScheduleBuildProgress
+from main.models import ScheduleBuildProgress, announce
+
 
 def schedule_progress_api(request):
     school = _require_school(request)

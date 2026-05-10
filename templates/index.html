@@ -172,11 +172,132 @@
       font-size:14px;
       line-height:2;
     }
+    /* نوار اعلان */
+.top-announcement-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 99%;
+  z-index: 1000;
+  background-color: rgb(255, 175, 2);
+  box-shadow: 0 2px 5px rgb(0, 0, 0);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 15px;
+  text-align: center;
+}
+
+/* حالت عکس */
+.top-announcement-bar.has-image {
+  height: 80px; /* ارتفاع ثابت برای عکس */
+}
+
+/* حالت متن */
+.top-announcement-bar.has-text {
+  height: 60px; /* ارتفاع کمتر برای متن */
+  font-weight: bold;
+  font-size: 18px;
+  color: #000000;
+}
+
+/* عکس بنر */
+.announcement-image {
+  width: 100%;
+  max-width: 1400px; /* حداکثر عرض عکس */
+  height: 80px;       /* ارتفاع ثابت */
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+}
+
+/* متن اعلان */
+.announcement-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 10px;
+  line-height: 60px;
+}
+
+/* دایره چشمک زن کنار متن */
+.blinking-dot {
+  width: 8px;
+  height: 8px;
+  background-color: red;
+  border-radius: 50%;
+  margin: 0 8px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* فاصله از بالا برای بدنه */
+body.has-announcement {
+  padding-top: 80px; /* ارتفاع بیشتر برای عکس */
+}
+
+/* واکنش‌گرایی */
+
+/* موبایل و صفحه‌های کوچک */
+@media (max-width: 768px) {
+  .top-announcement-bar.has-image {
+    height: 60px;
+  }
+  .announcement-image {
+    height: 60px;
+    object-fit: contain; /* حفظ نسبت تصویر */
+  }
+
+  .top-announcement-bar.has-text {
+    height: 70px;
+    font-size: 16px;
+  }
+  .announcement-text {
+    line-height: 70px;
+    font-size: 16px;
+  }
+  body.has-announcement {
+    padding-top: 70px;
+  }
+}
   </style>
+    <script>
+  // وقتی صفحه لود شد، به body کلاس اضافه کن تا فضای بالا ایجاد بشه
+  document.addEventListener("DOMContentLoaded", function() {
+    document.body.classList.add("has-announcement");
+  });
+
+  // تابع برای بستن نوار و حذف فضای بالا
+  function closeAnnouncement() {
+    const bar = document.getElementById('announcementBar');
+    bar.style.display = 'none';
+    document.body.classList.remove("has-announcement");
+  }
+</script>
 </head>
 <body>
   <div class="wrap">
-
+  {% if index_title.announce %}
+  <a href="{{ index_title.announce_link }}" class="announcement-link" target="_blank" rel="noopener noreferrer">
+    {% if index_title.announce_img %}
+      <div class="top-announcement-bar has-image" id="announcementBar">
+        <img src="{{ index_title.announce_img.url }}" alt="اعلان" class="announcement-image" />
+      </div>
+    {% elif index_title.announce_title %}
+      <div class="top-announcement-bar has-text" id="announcementBar">
+        <div class="blinking-dot"></div>
+        <span class="announcement-text">{{ index_title.announce_title }}</span>
+        <div class="blinking-dot"></div>
+      </div>
+    {% endif %}
+  </a>
+{% endif %}
     <div class="topbar">
       <div class="brand">
         <div class="logo"></div>

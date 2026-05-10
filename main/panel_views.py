@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from main.services.auto_assign import auto_assign_teachers
@@ -35,6 +36,7 @@ def _require_school(request):
         messages.error(request, "❌ این حساب به هیچ مدرسه‌ای وصل نیست.")
     return school
 
+
 @require_POST
 @login_required
 def assignment_auto_assign(request):
@@ -44,11 +46,17 @@ def assignment_auto_assign(request):
         return redirect("panel_dashboard")
 
     try:
-        auto_assign_teachers(school=school, verbose=False)
-        messages.success(request, "✅ AutoAssign انجام شد و TeachingAssignmentها ساخته شد.")
+        # اجرای تابع و دریافت لاگ‌ها
+        logs = auto_assign_teachers(school=school, verbose=True)
+
+        # ذخیره لاگ‌ها در سشن برای نمایش بعد از رفرش
+        request.session['auto_assign_logs'] = logs
+
+        messages.success(request, "✅ عملیات AutoAssign انجام شد.")
     except Exception as e:
         messages.error(request, f"❌ خطا در AutoAssign: {e}")
 
+    # رفرش کردن صفحه و بازگشت به داشبورد
     return redirect("panel_dashboard")
 @require_POST
 @login_required

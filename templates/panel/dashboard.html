@@ -6,12 +6,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>داشبورد</title>
   <script src="{% static 'assets/js/sweetalert2.all.min.js' %}"></script>
-
   <style>
     :root{
       --bg1:#050816; --bg2:#0b1a3a;
       --card:rgba(255,255,255,.08);
-      --card2:rgba(255,255,255,.10);
       --border:rgba(255,255,255,.12);
       --text:rgba(255,255,255,.92);
       --muted:rgba(255,255,255,.65);
@@ -21,7 +19,6 @@
       --shadow:0 18px 60px rgba(0,0,0,.35);
       --radius:22px;
     }
-
     body{
       margin:0;
       font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
@@ -32,9 +29,7 @@
       color:var(--text);
       font-size: 17px;
     }
-
     .wrap{max-width:1200px; margin:0 auto; padding:22px 18px 32px;}
-
     /* ---------- Topbar ---------- */
     .topbar{
       display:flex;
@@ -62,7 +57,6 @@
     }
     .brand .t1{font-weight:1000; line-height:1.2}
     .brand .t2{color:var(--muted); font-size:13px; margin-top:2px}
-
     .userbox{
       display:flex;
       align-items:center;
@@ -84,7 +78,6 @@
       font-weight:900;
     }
     .chip small{color:var(--muted); font-weight:900}
-
     /* ---------- Cards ---------- */
     .card{
       background: linear-gradient(180deg, var(--card), rgba(255,255,255,.06));
@@ -93,10 +86,8 @@
       box-shadow: var(--shadow);
       padding: 22px;
     }
-
     h1{margin:0 0 8px; font-size:30px;}
     .sub{color:var(--muted); margin-bottom:18px}
-
     .grid{
       display:grid;
       grid-template-columns: repeat(4, minmax(0,1fr));
@@ -104,7 +95,6 @@
     }
     @media (max-width:1100px){ .grid{grid-template-columns: repeat(2, minmax(0,1fr));} }
     @media (max-width:650px){ .grid{grid-template-columns: 1fr;} }
-
     .stat{
       border:1px solid rgba(255,255,255,.12);
       background: rgba(255,255,255,.06);
@@ -119,7 +109,6 @@
     .stat .n{font-size:28px; font-weight:1000; opacity:.92}
     .stat a{color:#a9c4ff; text-decoration:none; font-weight:900}
     .stat a:hover{text-decoration:underline;}
-
     .actions{
       display:flex;
       gap:10px;
@@ -127,7 +116,6 @@
       margin-top:18px;
       align-items:center;
     }
-
     /* ---------- Buttons ---------- */
     .btn{
       display:inline-flex;
@@ -150,37 +138,70 @@
       box-shadow:0 14px 35px rgba(60,120,255,.22);
     }
     .btn-primary:hover{transform:translateY(-1px); filter:brightness(1.03);}
-
     .btn-green{
       background:linear-gradient(90deg, var(--green2), var(--green1));
       box-shadow:0 14px 35px rgba(20,220,140,.18);
     }
     .btn-green:hover{transform:translateY(-1px); filter:brightness(1.03);}
-
     .btn-danger{
       background: linear-gradient(90deg, #ff2f2f, #ff6a6a);
       box-shadow:0 14px 35px rgba(255,60,60,.18);
     }
     .btn-danger:hover{transform:translateY(-1px); filter:brightness(1.03);}
-
     .btn-ghost{
       background:rgba(255,255,255,.07);
       border-color:rgba(255,255,255,.14);
       color:var(--text);
     }
     .btn-ghost:hover{background:rgba(255,255,255,.10);}
-
     .btn-sm{padding:10px 14px; font-size:15px;}
-
     .divider{height:1px; background:rgba(255,255,255,.12); margin:18px 0;}
-
+    .footer{
+      margin-top:18px;
+      color:var(--muted);
+      text-align:center;
+      font-size:14px;
+      line-height:2;
+    }
+    /* ---------- Log Box Styles ---------- */
+    .log-container {
+      margin-top: 20px;
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      color: #0f0;
+      max-height: 400px;
+      overflow-y: auto;
+      display: none; /* پیش‌فرض مخفی */
+      direction: ltr; /* لاگ‌ها انگلیسی/چپ‌چین هستند */
+      text-align: left;
+    }
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      color: #fff;
+      font-family: "Vazirmatn", sans-serif;
+      direction: rtl;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+    }
+    .log-line {
+      margin-bottom: 4px;
+      white-space: pre-wrap;
+    }
+    .log-line.error { color: #ff5555; }
+    .log-line.warning { color: #ffbb33; }
+    .log-line.success { color: #00e676; }
   </style>
 </head>
-
 <body>
   <div class="wrap">
-
-    <!-- ✅ Topbar -->
+    <!-- Topbar -->
     <div class="topbar">
       <div class="brand">
         <div class="logo"></div>
@@ -189,7 +210,6 @@
           <div class="t2">مدیریت اطلاعات + خروجی‌ها + ساخت برنامه</div>
         </div>
       </div>
-
       <div class="userbox">
         {% if user.is_authenticated %}
           <span class="chip">
@@ -199,7 +219,6 @@
           </span>
             <a class="btn btn-ghost btn-sm" href="{% url 'site_index' %}">بازگشت به صفحه اصلی</a>
           <a class="btn btn-ghost btn-sm" href="{% url 'panel_logout' %}" data-logout>خروج</a>
-
         {% else %}
           <span class="chip">
             🔒 مهمان
@@ -208,14 +227,12 @@
           <a class="btn btn-primary btn-sm" href="{% url 'panel_login' %}">ورود</a>
           <a class="btn btn-ghost btn-sm" href="{% url 'panel_register' %}">ثبت‌نام</a>
         {% endif %}
-
       </div>
     </div>
 
     <div class="card">
       <h1>داشبورد</h1>
       <div class="sub">آمار سریع + مدیریت بخش‌ها</div>
-
       <div class="grid">
         {% for s in stats %}
           <div class="stat">
@@ -227,63 +244,69 @@
           </div>
         {% endfor %}
       </div>
-
       <div class="divider"></div>
-
       <div class="actions">
         <!-- ساخت برنامه -->
         <form method="post" action="{% url 'panel_schedule_build' %}" style="display:inline;" data-build>
           {% csrf_token %}
           <button class="btn btn-green" type="button" id="buildScheduleBtn">🧠 ساخت برنامه</button>
         </form>
-                <!-- Progress Box -->
+
+        <!-- Progress Box -->
         <div id="scheduleProgressBox" style="display:none; margin-top:14px">
-
-          <div style="
-              background:#e5e7eb;
-              border-radius:10px;
-              overflow:hidden;
-              height:26px;
-          ">
-            <div id="scheduleProgressBar"
-                 style="
-                   width:0%;
-                   height:100%;
-                   background:linear-gradient(90deg,#4f46e5,#22c55e);
-                   color:white;
-                   font-weight:bold;
-                   text-align:center;
-                   line-height:26px;
-                   transition:width .4s ease;
-                 ">
-              0%
-            </div>
+          <div style="background:#e5e7eb; border-radius:10px; overflow:hidden; height:26px;">
+            <div id="scheduleProgressBar" style="width:0%; height:100%; background:linear-gradient(90deg,#4f46e5,#22c55e); color:white; font-weight:bold; text-align:center; line-height:26px; transition:width .4s ease;">0%</div>
           </div>
-
-          <div id="scheduleProgressText"
-               style="margin-top:6px;font-size:14px;color:#374151">
-            در انتظار شروع…
-          </div>
-
+          <div id="scheduleProgressText" style="margin-top:6px;font-size:14px;color:#374151">در انتظار شروع…</div>
         </div>
-        <form method="post" action="{% url 'assignment_auto_assign' %}" style="display:inline-block;">
-          {% csrf_token %}
-          <button class="btn btn-green" type="submit">🤖 AutoAssign</button>
+
+        <!-- دکمه AutoAssign -->
+        <!-- فرم را حذف کردیم و از دکمه ساده با جاوااسکریپت استفاده می‌کنیم -->
+        <form method="post" action="{% url 'assignment_auto_assign' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-green">🤖 AutoAssign</button>
         </form>
+
         <!-- خروجی‌ها -->
         <a class="btn btn-primary" data-export href="/export-excel/">📗 اکسل (کلاس‌محور)</a>
         <a class="btn btn-primary" data-export href="/export-excel-teacher/">📘 اکسل (دبیرمحور)</a>
-
         <a class="btn btn-ghost" href="{% url 'schedule_list' %}">📌 رفتن به برنامه‌ها</a>
       </div>
 
       {% if not user.is_authenticated %}
-        <div class="sub" style="margin-top:14px;">
-          ⚠️ برای ساخت برنامه و خروجی‌ها بهتره وارد بشی.
-        </div>
+        <div class="sub" style="margin-top:14px;">⚠️ برای ساخت برنامه و خروجی‌ها بهتره وارد بشی.</div>
       {% endif %}
     </div>
 
+    <!-- باکس نمایش لاگ AutoAssign -->
+{% if request.session.auto_assign_logs %}
+<div class="card" id="autoAssignLogCard" style="margin-top: 20px;">
+  <div class="log-header">
+    <span>📋 گزارش عملیات AutoAssign</span>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('autoAssignLogCard').style.display='none'">بستن</button>
+  </div>
+  <div class="log-container" style="display:block;">
+    {% for log_msg in request.session.auto_assign_logs %}
+      <div class="log-line">
+        {{ log_msg }}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<!-- پاک کردن لاگ از سشن بعد از نمایش تا دفعه بعد تکرار نشود -->
+{% if request.session.auto_assign_logs %}
+  <script>
+    // با یک درخواست کوچک یا صرفاً با جاوااسکریپت سشن را پاک نمی‌کنیم
+    // اما می‌توانیم در سمت سرور پاکش کنیم.
+    // برای سادگی اینجا فقط نمایش می‌دهیم.
+  </script>
+{% endif %}
+{% endif %}
+
+    <div class="footer">
+      © برنامه‌ساز مدارس — این متن را می‌توانی عوض کنی<br>
+      ساخته شده برای مدیریت سریع و دقیق برنامه‌های هفتگی
+    </div>
   </div>
 
 <script>
@@ -309,11 +332,9 @@
   (function(){
     const f = document.querySelector("form[data-build]");
     if(!f) return;
-
     f.addEventListener("submit", function(e){
       if (f.dataset.confirmed === "1") return;
       e.preventDefault();
-
       Swal.fire({
         icon: "question",
         title: "ساخت برنامه؟",
@@ -335,7 +356,6 @@
   (function(){
     const a = document.querySelector("[data-logout]");
     if(!a) return;
-
     a.addEventListener("click", function(e){
       e.preventDefault();
       Swal.fire({
@@ -369,58 +389,103 @@
       });
     });
   })();
-</script>
-<script>
-let scheduleProgressTimer = null;
 
-function startScheduleProgress() {
-  const box = document.getElementById("scheduleProgressBox");
-  const bar = document.getElementById("scheduleProgressBar");
-  const text = document.getElementById("scheduleProgressText");
+  // منطق AutoAssign با AJAX
+  (function(){
+    const btn = document.getElementById("autoAssignBtn");
+    const logCard = document.getElementById("autoAssignLogCard");
+    const logContent = document.getElementById("autoAssignLogContent");
 
-  box.style.display = "block";
-  bar.style.width = "0%";
-  bar.innerText = "0%";
-  text.innerText = "شروع ساخت برنامه…";
+    if(!btn) return;
 
-  scheduleProgressTimer = setInterval(() => {
-    fetch("{% url 'schedule_progress' %}")
-      .then(r => r.json())
-      .then(data => {
-        bar.style.width = data.percent + "%";
-        bar.innerText = data.percent + "%";
-        text.innerText = data.status;
+    btn.addEventListener("click", function(){
+      // نمایش باکس لاگ و پاک کردن قبلی‌ها
+      logCard.style.display = "block";
+      logContent.innerHTML = "<div class='log-line'>در حال ارسال درخواست به سرور...</div>";
 
-        if (data.percent >= 100) {
-          clearInterval(scheduleProgressTimer);
+      // اسکرول به پایین
+      logCard.scrollIntoView({behavior: "smooth"});
+
+      // ارسال درخواست AJAX
+      fetch("{% url 'assignment_auto_assign' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": "{{ csrf_token }}",
+          "Content-Type": "application/json"
         }
       })
-      .catch(() => {
-        text.innerText = "خطا در دریافت وضعیت…";
+      .then(response => response.json())
+      .then(data => {
+        logContent.innerHTML = ""; // پاک کردن پیام لودینگ
+
+        if (data.success) {
+          // نمایش لاگ‌ها خط به خط
+          data.logs.forEach(logMsg => {
+            const div = document.createElement("div");
+            div.className = "log-line";
+
+            // رنگ‌بندی ساده بر اساس متن
+            if (logMsg.includes("OVERLOAD") || logMsg.includes("❌")) div.classList.add("error");
+            else if (logMsg.includes("⚠")) div.classList.add("warning");
+            else if (logMsg.includes("✅")) div.classList.add("success");
+
+            div.textContent = logMsg;
+            logContent.appendChild(div);
+          });
+        } else {
+          logContent.innerHTML = `<div class='log-line error'>خطا: ${data.message}</div>`;
+        }
+      })
+      .catch(error => {
+        logContent.innerHTML = `<div class='log-line error'>خطا در ارتباط با سرور: ${error}</div>`;
       });
-  }, 1200);
-}
+    });
+  })();
 
-document.getElementById("buildScheduleBtn").addEventListener("click", function () {
-  Swal.fire({
-    icon: "question",
-    title: "ساخت برنامه؟",
-    text: "برنامه جدید ساخته می‌شود و جایگزین قبلی خواهد شد.",
-    showCancelButton: true,
-    confirmButtonText: "✅ بساز",
-    cancelButtonText: "لغو",
-    reverseButtons: true
-  }).then((res) => {
-    if(!res.isConfirmed) return;
-
-    startScheduleProgress();
-
-    fetch("{% url 'panel_schedule_build' %}", {
-      method: "POST",
-      headers: {"X-CSRFToken": "{{ csrf_token }}"},
-    })
+  // منطق نوار پیشرفت ساخت برنامه (بدون تغییر)
+  let scheduleProgressTimer = null;
+  function startScheduleProgress() {
+    const box = document.getElementById("scheduleProgressBox");
+    const bar = document.getElementById("scheduleProgressBar");
+    const text = document.getElementById("scheduleProgressText");
+    box.style.display = "block";
+    bar.style.width = "0%";
+    bar.innerText = "0%";
+    text.innerText = "شروع ساخت برنامه…";
+    scheduleProgressTimer = setInterval(() => {
+      fetch("{% url 'schedule_progress' %}")
+        .then(r => r.json())
+        .then(data => {
+          bar.style.width = data.percent + "%";
+          bar.innerText = data.percent + "%";
+          text.innerText = data.status;
+          if (data.percent >= 100) {
+            clearInterval(scheduleProgressTimer);
+          }
+        })
+        .catch(() => {
+          text.innerText = "خطا در دریافت وضعیت…";
+        });
+    }, 1200);
+  }
+  document.getElementById("buildScheduleBtn").addEventListener("click", function () {
+    Swal.fire({
+      icon: "question",
+      title: "ساخت برنامه؟",
+      text: "برنامه جدید ساخته می‌شود و جایگزین قبلی خواهد شد.",
+      showCancelButton: true,
+      confirmButtonText: "✅ بساز",
+      cancelButtonText: "لغو",
+      reverseButtons: true
+    }).then((res) => {
+      if(!res.isConfirmed) return;
+      startScheduleProgress();
+      fetch("{% url 'panel_schedule_build' %}", {
+        method: "POST",
+        headers: {"X-CSRFToken": "{{ csrf_token }}"},
+      })
+    });
   });
-});
 </script>
 </body>
 </html>

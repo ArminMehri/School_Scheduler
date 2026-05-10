@@ -19,7 +19,7 @@ from .models import (
     TeachingAssignmentItem,
     Schedule,
 )
-
+admin.site.register(models.announce)
 # ============================================================
 # Teacher + Availability (Inline)
 # ============================================================
@@ -70,8 +70,9 @@ class TeachingAssignmentItemAdmin(admin.ModelAdmin):
         "lesson",
         "weekly_hours",
         "assignment",
+        "school",
     )
-    list_filter = ("school_class", "lesson")
+    list_filter = ("school_class", "lesson","school",)
     search_fields = (
         "school_class__name",
         "lesson__name",
@@ -100,7 +101,8 @@ class TeachingAssignmentItemInline(admin.TabularInline):
 
 @admin.register(TeachingAssignment)
 class TeachingAssignmentAdmin(admin.ModelAdmin):
-    list_display = ('teacher', 'assigned_classes_info')
+    list_display = ('teacher', 'assigned_classes_info',"school",)
+    list_filter = ("school",)
     search_fields = ('teacher__name',)
     inlines = [TeachingAssignmentItemInline]
 
