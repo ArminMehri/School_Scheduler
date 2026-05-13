@@ -56,6 +56,10 @@ def company_index(request):
         'index_title1': index_title1,
     }
     return render(request, "site/company_index.html", context)
+
+def about(request):
+    return render(request, "site/about.html")
+
 def site_index(request):
     index_title = announce.objects.all().first()
     context = {

@@ -425,9 +425,25 @@ body.has-announcement{
   </style>
     <script>
   // وقتی صفحه لود شد، به body کلاس اضافه کن تا فضای بالا ایجاد بشه
-  document.addEventListener("DOMContentLoaded", function() {
-    document.body.classList.add("has-announcement");
+   document.addEventListener("DOMContentLoaded", function() {
+    const bar = document.getElementById("announcementBar");
+
+    if (bar) {
+      document.body.classList.add("has-announcement");
+    } else {
+      document.body.classList.remove("has-announcement");
+    }
   });
+
+  function closeAnnouncement() {
+    const bar = document.getElementById("announcementBar");
+
+    if (bar) {
+      bar.style.display = "none";
+    }
+
+    document.body.classList.remove("has-announcement");
+  }
 
   // تابع برای بستن نوار و حذف فضای بالا
   function closeAnnouncement() {

@@ -21,6 +21,7 @@ from main import panel_views as v
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", views.company_index, name="company_index"),
+    path("about/", views.about, name="about"),
     path("Scheduler/", views.site_index, name="site_index"),
     # path('', views.schedule_table, name='schedule_table'),
     path('build-schedule/', views.build_schedule, name='build_schedule'),
