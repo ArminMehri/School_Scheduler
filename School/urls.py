@@ -20,11 +20,12 @@ from main import views
 from main import panel_views as v
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("", views.company_index, name="company_index"),
+    path("Scheduler/", views.site_index, name="site_index"),
     # path('', views.schedule_table, name='schedule_table'),
     path('build-schedule/', views.build_schedule, name='build_schedule'),
     path('export-excel/', views.export_schedule_excel, name='export_excel'),
     path("export-excel-teacher/", views.export_schedule_excel_teacher, name="export_excel_teacher"),
-    path("", views.site_index, name="site_index"),
     path("panel/", include("main.panel_urls")),
     path('Logs/', views.schedule_build_view, name='schedule-build'),
     path("login/", v.auth_login, name="panel_login"),
@@ -32,3 +33,10 @@ urlpatterns = [
     path("logout/", v.auth_logout, name="panel_logout"),
     path("schedule/progress/", views.schedule_progress_api, name="schedule_progress"),
 ]
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns += static(
+    settings.MEDIA_URL,
+    document_root=settings.MEDIA_ROOT
+)

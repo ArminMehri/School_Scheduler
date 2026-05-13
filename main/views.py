@@ -49,7 +49,13 @@ def _require_school(request):
         messages.error(request, "❌ این حساب به هیچ مدرسه‌ای وصل نیست.")
     return school
 
+def company_index(request):
+    index_title1 = announce_company.objects.filter(announce=True).order_by('-id').first()
 
+    context = {
+        'index_title1': index_title1,
+    }
+    return render(request, "site/company_index.html", context)
 def site_index(request):
     index_title = announce.objects.all().first()
     context = {

@@ -1,12 +1,23 @@
 from django.db import models
+class announce_company(models.Model):
+    announce_title = models.CharField(max_length=1000, verbose_name="اطلاعیه سایت")
+    announce = models.BooleanField(default=False, verbose_name="فعال شدن اطلاعیه سایت")
+    announce_img = models.ImageField(blank=True,null=True,upload_to='announce/', verbose_name="عکس بنر در صورت نیاز",help_text="مهم :اندازه بنز به ارتفاع 80 پیکسل و طول 1400 پیکسل! رنگ پس زمینه عکس باید زرد روشن باشه")
+    announce_link = models.CharField(max_length=1000, verbose_name="لینک صفحه مورد نظر")
+    class Meta:
+        verbose_name = "اطلاعیه سایت شرکت"
+        verbose_name_plural = "اطلاعیه سایت شرکت"
+    def __str__(self):
+        return f"{self.announce_title}"
+
 class announce(models.Model):
     announce_title = models.CharField(max_length=1000, verbose_name="اطلاعیه سایت")
     announce = models.BooleanField(default=False, verbose_name="فعال شدن اطلاعیه سایت")
-    announce_img = models.ImageField(blank=True,null=True,upload_to='announce', verbose_name="عکس بنر در صورت نیاز",help_text="مهم :اندازه بنز به ارتفاع 80 پیکسل و طول 1400 پیکسل! رنگ پس زمینه عکس باید زرد روشن باشه")
+    announce_img = models.ImageField(blank=True,null=True,upload_to='announce/', verbose_name="عکس بنر در صورت نیاز",help_text="مهم :اندازه بنز به ارتفاع 80 پیکسل و طول 1400 پیکسل! رنگ پس زمینه عکس باید زرد روشن باشه")
     announce_link = models.CharField(max_length=1000, verbose_name="لینک صفحه مورد نظر")
     class Meta:
-        verbose_name = "اطلاعیه سایت"
-        verbose_name_plural = "اطلاعیه سایت"
+        verbose_name = "اطلاعیه سایت برنامه ساز"
+        verbose_name_plural = "اطلاعیه سایت  برنامه ساز"
     def __str__(self):
         return f"{self.announce_title}"
 

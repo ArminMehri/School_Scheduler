@@ -20,6 +20,7 @@ from .models import (
     Schedule,
 )
 admin.site.register(models.announce)
+admin.site.register(models.announce_company)
 # ============================================================
 # Teacher + Availability (Inline)
 # ============================================================
