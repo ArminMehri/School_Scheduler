@@ -537,11 +537,13 @@ body.has-announcement{
 
       <div class="nav">
         <a class="btn btn-ghost" href="#services">خدمات</a>
-        <a class="btn btn-ghost" href="about/">درباره ما</a>
+        <a class="btn btn-ghost" href="{% url 'company_about' %}">درباره ما</a>
         {% if user.is_authenticated %}
+            <a class="btn btn-primary" href="{% url 'company_dashboard' %}">👤حساب کاربری</a>
+            <a class="btn btn-green" href="{% url 'cart_page' %}">🛒سبد خرید</a>
         {% else %}
           <a class="btn btn-primary" href="{% url 'panel_login' %}">ورود</a>
-          <a class="btn btn-primary" href="{% url 'panel_register' %}">ثبت‌نام</a>
+          <a class="btn btn-primary" href="{% url 'company_register' %}">ثبت‌نام</a>
         {% endif %}
       </div>
     </div>

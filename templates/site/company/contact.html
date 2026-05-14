@@ -1,0 +1,90 @@
+{% extends "site/company/base.html" %}
+
+{% block title %}تماس با ما | مهرگان تک{% endblock %}
+
+{% block content %}
+
+<div class="grid2">
+  <div class="card">
+    <h1>تماس با <span class="accent">مهرگان تک</span></h1>
+    <div class="sub">
+      برای سفارش پروژه، دریافت مشاوره، پشتیبانی سرویس‌ها یا همکاری، از اطلاعات زیر استفاده کنید.
+    </div>
+
+    <div style="margin-top:18px;display:grid;gap:12px;">
+      <div class="item">
+        <strong>📞 شماره تماس</strong>
+        <div class="sub">09xx xxx xxxx</div>
+      </div>
+
+      <div class="item">
+        <strong>📧 ایمیل</strong>
+        <div class="sub">info@example.com</div>
+      </div>
+
+      <div class="item">
+        <strong>🌐 وب‌سایت</strong>
+        <div class="sub">Mehrgan Tech Digital Solutions</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>فرم درخواست مشاوره</h2>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <label>نام و نام خانوادگی</label>
+      <input name="full_name" type="text" placeholder="نام شما">
+
+      <label>شماره تماس</label>
+      <input name="mobile" type="text" placeholder="شماره موبایل">
+
+      <label>موضوع درخواست</label>
+      <input name="subject" type="text" placeholder="مثلاً طراحی سایت یا پنل مدرسه">
+
+      <label>توضیحات</label>
+      <textarea name="message" placeholder="توضیحات درخواست شما"></textarea>
+
+      <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px;">
+        ارسال درخواست
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  label{
+    display:block;
+    margin:12px 0 6px;
+    color:var(--muted);
+    font-weight:800;
+  }
+
+  input, textarea{
+    width:100%;
+    border-radius:16px;
+    padding:13px 14px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(10,18,40,.55);
+    color:var(--text);
+    outline:none;
+    font-size:16px;
+    font-family:inherit;
+  }
+
+  textarea{
+    min-height:130px;
+    resize:vertical;
+  }
+
+  input::placeholder,
+  textarea::placeholder{
+    color:rgba(255,255,255,.42);
+  }
+</style>
+{% endblock %}

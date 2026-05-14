@@ -4,6 +4,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.decorators import login_required
 
 from main.services.validator import run_full_validation
 from main.models import *
@@ -59,6 +60,100 @@ def company_index(request):
 
 def about(request):
     return render(request, "site/about.html")
+User = get_user_model()
+
+# =========================
+# Account Management Page
+# =========================
+def account_manage(request):
+
+    users = User.objects.all().order_by('-id')
+
+    total_users = users.count()
+
+    active_users = users.filter(
+        is_active=True
+    ).count()
+
+    blocked_users = users.filter(
+        is_active=False
+    ).count()
+
+    staff_users = users.filter(
+        is_staff=True
+    ).count()
+
+    context = {
+        'users': users,
+
+        'total_users': total_users,
+        'active_users': active_users,
+        'blocked_users': blocked_users,
+        'staff_users': staff_users,
+    }
+
+    return render(
+        request,
+        'site/account_manage.html',
+        context
+    )
+
+
+# =========================
+# Cart Page
+# =========================
+def cart_page(request):
+
+    """
+    نمونه سبد خرید موقت
+    بعداً میتونی از session یا database بخونی
+    """
+
+    cart_items = [
+
+        {
+            'title': 'پنل برنامه‌ساز مدارس',
+            'description': 'نسخه حرفه‌ای مدیریت مدارس',
+            'quantity': 1,
+            'price': 2500000,
+            'total_price': 2500000,
+        },
+
+        {
+            'title': 'طراحی سایت اختصاصی',
+            'description': 'طراحی وب‌سایت شرکتی و مدیریتی',
+            'quantity': 1,
+            'price': 4800000,
+            'total_price': 4800000,
+        },
+
+    ]
+
+    subtotal = sum(
+        item['total_price']
+        for item in cart_items
+    )
+
+    discount = 500000
+
+    tax = 0
+
+    total = subtotal - discount + tax
+
+    context = {
+        'cart_items': cart_items,
+
+        'subtotal': subtotal,
+        'discount': discount,
+        'tax': tax,
+        'total': total,
+    }
+
+    return render(
+        request,
+        'site/cart.html',
+        context
+    )
 
 def site_index(request):
     index_title = announce.objects.all().first()
@@ -458,6 +553,61 @@ def panel_logout(request):
 from django.http import JsonResponse
 from main.models import ScheduleBuildProgress, announce
 
+def company_register(request):
+    if request.user.is_authenticated:
+        return redirect("company_index")
+
+    if request.method == "POST":
+        User = get_user_model()
+
+        full_name = (request.POST.get("full_name") or "").strip()
+        mobile = (request.POST.get("mobile") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        username = (request.POST.get("username") or "").strip()
+        password = (request.POST.get("password") or "").strip()
+        password2 = (request.POST.get("password2") or "").strip()
+
+        if not all([full_name, mobile, username, password, password2]):
+            messages.error(request, "❌ لطفاً فیلدهای ضروری را کامل کن.")
+            return render(request, "site/company_register.html")
+
+        if password != password2:
+            messages.error(request, "❌ رمز عبور و تکرار آن یکی نیستند.")
+            return render(request, "site/company_register.html")
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "❌ این نام کاربری قبلاً گرفته شده.")
+            return render(request, "site/company_register.html")
+
+        if email and User.objects.filter(email=email).exists():
+            messages.error(request, "❌ این ایمیل قبلاً ثبت شده.")
+            return render(request, "site/company_register.html")
+
+        try:
+            with transaction.atomic():
+                user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    email=email,
+                )
+
+                if hasattr(user, "full_name"):
+                    user.full_name = full_name
+
+                if hasattr(user, "phone"):
+                    user.phone = mobile
+
+                user.save()
+
+            login(request, user)
+            messages.success(request, "✅ ثبت‌نام با موفقیت انجام شد.")
+            return redirect("company_index")
+
+        except Exception as e:
+            messages.error(request, f"❌ خطا در ثبت‌نام: {e}")
+
+    return render(request, "site/company_register.html")
+
 
 def schedule_progress_api(request):
     school = _require_school(request)
@@ -468,4 +618,42 @@ def schedule_progress_api(request):
     return JsonResponse({
         "percent": obj.percent,
         "status": obj.status,
+    })
+
+def company_services(request):
+    return render(request, "site/company/services.html")
+
+
+def company_contact(request):
+    return render(request, "site/company/contact.html")
+
+
+@login_required
+def company_dashboard(request):
+    return render(request, "site/company/dashboard.html", {
+        "orders_count": 0,
+        "projects_count": 0,
+        "tickets_count": 0,
+    })
+
+
+@login_required
+def company_orders(request):
+    return render(request, "site/company/orders.html", {
+        "orders": [],
+    })
+
+
+@login_required
+def company_projects(request):
+    return render(request, "site/company/projects.html", {
+        "projects": [],
+    })
+
+
+
+@login_required
+def company_tickets(request):
+    return render(request, "site/company/tickets.html", {
+        "tickets": [],
     })

@@ -1,0 +1,110 @@
+{% extends "site/company/base.html" %}
+
+{% block title %}تیکت‌های پشتیبانی | مهرگان تک{% endblock %}
+
+{% block content %}
+
+<div class="grid2">
+  <div class="card">
+    <h1>تیکت‌های <span class="accent">پشتیبانی</span></h1>
+    <div class="sub">
+      برای پیگیری سفارش‌ها، پروژه‌ها، پرداخت یا مشکلات فنی می‌توانید تیکت ارسال کنید.
+    </div>
+
+    <div style="margin-top:18px;display:grid;gap:12px;">
+      {% for ticket in tickets %}
+      <div class="item">
+        <h2 style="font-size:20px;">{{ ticket.subject }}</h2>
+        <div class="sub">{{ ticket.message|truncatechars:120 }}</div>
+        <div class="ticket-meta">
+          <span>{{ ticket.created_at|date:"Y/m/d" }}</span>
+          <strong>{{ ticket.status|default:"باز" }}</strong>
+        </div>
+      </div>
+      {% empty %}
+      <div class="item">
+        <h2>تیکتی ثبت نشده است</h2>
+        <div class="sub">اولین درخواست پشتیبانی خود را از فرم کنار صفحه ارسال کنید.</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>ارسال تیکت جدید</h2>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <label>موضوع</label>
+      <input name="subject" type="text" placeholder="مثلاً مشکل پرداخت یا درخواست پشتیبانی">
+
+      <label>بخش مربوطه</label>
+      <select name="department">
+        <option value="support">پشتیبانی عمومی</option>
+        <option value="payment">پرداخت و سفارش</option>
+        <option value="project">پروژه‌ها</option>
+        <option value="technical">فنی</option>
+      </select>
+
+      <label>پیام</label>
+      <textarea name="message" placeholder="متن درخواست خود را بنویسید"></textarea>
+
+      <button class="btn btn-primary" type="submit" style="width:100%;margin-top:14px;">
+        ارسال تیکت
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  label{
+    display:block;
+    margin:12px 0 6px;
+    color:var(--muted);
+    font-weight:800;
+  }
+
+  input, textarea, select{
+    width:100%;
+    border-radius:16px;
+    padding:13px 14px;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(10,18,40,.55);
+    color:var(--text);
+    outline:none;
+    font-size:16px;
+    font-family:inherit;
+  }
+
+  textarea{
+    min-height:140px;
+    resize:vertical;
+  }
+
+  option{
+    background:#081226;
+    color:white;
+  }
+
+  input::placeholder,
+  textarea::placeholder{
+    color:rgba(255,255,255,.42);
+  }
+
+  .ticket-meta{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:12px;
+    color:var(--muted);
+  }
+
+  .ticket-meta strong{
+    color:var(--cyan);
+  }
+</style>
+{% endblock %}

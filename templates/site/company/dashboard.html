@@ -1,0 +1,66 @@
+{% extends "site/company/base.html" %}
+
+{% block title %}داشبورد کاربری | مهرگان تک{% endblock %}
+
+{% block content %}
+
+<div class="card" style="margin-bottom:18px;">
+  <h1>داشبورد <span class="accent">کاربری</span></h1>
+  <div class="sub">
+    از این بخش می‌توانید سفارش‌ها، پروژه‌ها، تیکت‌ها و سرویس‌های فعال خود را مدیریت کنید.
+  </div>
+</div>
+
+<div class="grid3" style="margin-bottom:18px;">
+  <div class="item">
+    <div class="icon">🛒</div>
+    <h2>{{ orders_count|default:"0" }}</h2>
+    <div class="sub">سفارش‌ها</div>
+  </div>
+
+  <div class="item">
+    <div class="icon">📁</div>
+    <h2>{{ projects_count|default:"0" }}</h2>
+    <div class="sub">پروژه‌ها</div>
+  </div>
+
+  <div class="item">
+    <div class="icon">🎫</div>
+    <h2>{{ tickets_count|default:"0" }}</h2>
+    <div class="sub">تیکت‌های پشتیبانی</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <h2>دسترسی سریع</h2>
+    <div class="sub">بخش‌های پرکاربرد حساب کاربری شما.</div>
+
+    <div style="display:grid;gap:10px;margin-top:16px;">
+      <a class="btn btn-primary" href="{% url 'company_orders' %}">مشاهده سفارش‌ها</a>
+      <a class="btn btn-green" href="{% url 'company_projects' %}">مشاهده پروژه‌ها</a>
+      <a class="btn btn-ghost" href="{% url 'company_tickets' %}">ارسال تیکت پشتیبانی</a>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>وضعیت حساب</h2>
+    <div class="item">
+      <strong>کاربر:</strong>
+      <div class="sub">{{ request.user.username }}</div>
+    </div>
+
+    <div class="item" style="margin-top:12px;">
+      <strong>ایمیل:</strong>
+      <div class="sub">{{ request.user.email|default:"ثبت نشده" }}</div>
+    </div>
+
+    <div class="item" style="margin-top:12px;">
+      <strong>وضعیت:</strong>
+      <div class="sub">فعال</div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

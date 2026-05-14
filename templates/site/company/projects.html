@@ -1,0 +1,83 @@
+{% extends "site/company/base.html" %}
+
+{% block title %}پروژه‌ها | مهرگان تک{% endblock %}
+
+{% block content %}
+
+<div class="card" style="margin-bottom:18px;">
+  <h1>پروژه‌های <span class="accent">من</span></h1>
+  <div class="sub">
+    وضعیت پروژه‌های نرم‌افزاری، طراحی سایت، پنل مدیریتی یا سرویس‌های اختصاصی شما.
+  </div>
+</div>
+
+<div class="grid3">
+  {% for project in projects %}
+  <div class="item">
+    <div class="icon">📁</div>
+    <h2>{{ project.title }}</h2>
+    <div class="sub">{{ project.description|default:"پروژه نرم‌افزاری مهرگان تک" }}</div>
+
+    <div class="progress">
+      <div class="progress-bar" style="width:{{ project.progress|default:'0' }}%;">
+        {{ project.progress|default:"0" }}%
+      </div>
+    </div>
+
+    <div class="meta">
+      <span>وضعیت:</span>
+      <strong>{{ project.status|default:"در حال بررسی" }}</strong>
+    </div>
+
+    <a class="btn btn-primary" style="width:100%;margin-top:14px;" href="#">مشاهده جزئیات</a>
+  </div>
+  {% empty %}
+  <div class="card" style="grid-column:1/-1;">
+    <h2>پروژه‌ای ثبت نشده است</h2>
+    <div class="sub">بعد از ثبت سفارش یا شروع همکاری، پروژه‌های شما اینجا نمایش داده می‌شوند.</div>
+    <br>
+    <a class="btn btn-green" href="{% url 'company_services' %}">مشاهده خدمات</a>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .progress{
+    height:28px;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:16px;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.12);
+  }
+
+  .progress-bar{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(90deg,var(--blue2),var(--green1));
+    color:#fff;
+    font-weight:1000;
+    font-size:13px;
+  }
+
+  .meta{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:14px;
+    padding:12px;
+    border-radius:16px;
+    background:rgba(255,255,255,.055);
+    color:var(--muted);
+  }
+
+  .meta strong{
+    color:var(--text);
+  }
+</style>
+{% endblock %}

@@ -7,7 +7,7 @@ urlpatterns = [
 
     # Dashboard
     path("", v.panel_dashboard, name="panel_dashboard"),
-
+    path("school/setup/", v.school_setup, name="school_setup"),
     # Actions
     path("generate/", v.generate_schedule_view, name="generate_schedule"),
     path("schedule/clear/", v.schedule_clear, name="schedule_clear"),
