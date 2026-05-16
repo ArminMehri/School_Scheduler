@@ -5,7 +5,7 @@ from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
-
+from django.contrib.admin.views.decorators import staff_member_required
 from main.services.validator import run_full_validation
 from main.models import *
 from .solver_engine import generate_schedule_with_ortools
@@ -65,6 +65,7 @@ User = get_user_model()
 # =========================
 # Account Management Page
 # =========================
+@staff_member_required
 def account_manage(request):
 
     users = User.objects.all().order_by('-id')
