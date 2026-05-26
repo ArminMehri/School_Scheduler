@@ -1,0 +1,71 @@
+{% extends "site/company/base.html" %}
+
+{% block title %}خدمات | مهرگان تک{% endblock %}
+
+{% block content %}
+
+<div class="card" style="margin-bottom:18px;">
+  <h1>خدمات <span class="accent">مهرگان تک</span></h1>
+  <div class="sub">
+    مجموعه‌ای از راهکارهای نرم‌افزاری برای مدارس، کسب‌وکارها و مجموعه‌هایی که به پنل مدیریتی،
+    اتوماسیون، وب‌سایت اختصاصی و ابزارهای هوشمند نیاز دارند.
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="item">
+    <div class="icon">🏫</div>
+    <h2>پنل برنامه‌ساز مدارس</h2>
+    <div class="sub">
+      ساخت برنامه هفتگی مدرسه با رعایت حضور دبیرها، ظرفیت کلاس‌ها، زنگ‌ها و خروجی اکسل.
+    </div>
+    <br>
+    <a class="btn btn-green" href="{% url 'site_index' %}">ورود به سرویس</a>
+  </div>
+
+  <div class="item">
+    <div class="icon">💻</div>
+    <h2>طراحی سایت اختصاصی</h2>
+    <div class="sub">
+      طراحی وب‌سایت شرکتی، فروشگاهی، شخصی، رزومه‌ای و صفحات معرفی خدمات با ظاهر حرفه‌ای.
+    </div>
+    <br>
+    <a class="btn btn-primary" href="{% url 'company_contact' %}">ثبت درخواست</a>
+  </div>
+
+  <div class="item">
+    <div class="icon">⚙️</div>
+    <h2>پنل مدیریتی</h2>
+    <div class="sub">
+      ساخت داشبورد مدیریت، سیستم کاربران، سفارش‌ها، گزارش‌گیری، نقش‌ها و سطح دسترسی.
+    </div>
+    <br>
+    <a class="btn btn-primary" href="{% url 'company_contact' %}">مشاوره</a>
+  </div>
+
+  <div class="item">
+    <div class="icon">📊</div>
+    <h2>اتوماسیون و گزارش‌گیری</h2>
+    <div class="sub">
+      تبدیل کارهای دستی به فرآیندهای قابل کنترل با خروجی اکسل، گزارش آماری و پنل تحلیل داده.
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="icon">🛒</div>
+    <h2>فروشگاه و پرداخت</h2>
+    <div class="sub">
+      راه‌اندازی سیستم فروش، سبد خرید، سفارش، فاکتور، مدیریت پرداخت و پنل مشتریان.
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="icon">🔐</div>
+    <h2>احراز هویت و اکانت</h2>
+    <div class="sub">
+      طراحی سیستم ورود، ثبت‌نام، پروفایل، نقش کاربری، پنل مشتری و مدیریت حساب‌ها.
+    </div>
+  </div>
+</div>
+
+{% endblock %}

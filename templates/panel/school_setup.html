@@ -1,0 +1,263 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ثبت مدرسه | مهرگان تک</title>
+
+  <script src="{% static 'assets/js/sweetalert2.all.min.js' %}"></script>
+
+  <style>
+    :root{
+      --bg1:#050816; --bg2:#0b1a3a;
+      --card:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --blue1:#4f8bff; --blue2:#2f6bff;
+      --green1:#19d18c; --green2:#0fb57a;
+      --cyan:#35e0ff;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:24px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1000px 520px at 80% 5%, rgba(53,224,255,.16), transparent 55%),
+        radial-gradient(900px 500px at 15% 85%, rgba(79,139,255,.20), transparent 55%),
+        linear-gradient(160deg,var(--bg1),var(--bg2));
+    }
+
+    .card{
+      width:min(620px,100%);
+      padding:24px;
+      border-radius:var(--radius);
+      background:linear-gradient(180deg,var(--card),rgba(255,255,255,.055));
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(12px);
+    }
+
+    .logo{
+      width:82px;
+      height:68px;
+      margin:0 auto 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(145deg,rgba(12,24,55,.98),rgba(5,10,25,.98));
+      border:1px solid rgba(47,210,210,.35);
+      border-radius:22px;
+      padding:3px;
+      overflow:hidden;
+    }
+
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+
+    h1{
+      margin:0 0 8px;
+      text-align:center;
+      font-size:28px;
+    }
+
+    .sub{
+      text-align:center;
+      color:var(--muted);
+      line-height:1.9;
+      margin-bottom:18px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+
+    .field-full{
+      grid-column:1 / -1;
+    }
+
+    label{
+      display:block;
+      margin:12px 0 6px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    input{
+      width:100%;
+      border-radius:16px;
+      padding:13px 14px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(10,18,40,.55);
+      color:var(--text);
+      outline:none;
+      font-size:16px;
+    }
+
+    input::placeholder{
+      color:rgba(255,255,255,.42);
+    }
+
+    .btn{
+      width:100%;
+      margin-top:18px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border-radius:999px;
+      padding:13px 18px;
+      border:1px solid transparent;
+      cursor:pointer;
+      font-weight:1000;
+      font-size:16px;
+      text-decoration:none;
+      color:#fff;
+      transition:.18s ease;
+    }
+
+    .btn-primary{
+      background:linear-gradient(90deg,var(--blue2),var(--blue1));
+      box-shadow:0 14px 35px rgba(60,120,255,.25);
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.04);
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    .link{
+      color:rgba(255,255,255,.85);
+      text-decoration:none;
+      font-weight:800;
+    }
+
+    .link:hover{
+      text-decoration:underline;
+    }
+
+    @media(max-width:600px){
+      .grid{grid-template-columns:1fr}
+      .field-full{grid-column:auto}
+      h1{font-size:24px}
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+  <div class="logo">
+    <img src="{% static 'assets/images/Mehreganlogo.png' %}" alt="Mehrgan Tech">
+  </div>
+
+  <h1>ثبت اطلاعات مدرسه</h1>
+
+  <div class="sub">
+    برای فعال‌سازی پنل برنامه‌ساز مدارس، فقط اطلاعات مدرسه را تکمیل کن.
+    حساب کاربری شما قبلاً در مهرگان تک ساخته شده است.
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="grid">
+      <div>
+        <label>نام مدرسه</label>
+        <input name="school_name" type="text" required
+               value="{{ request.POST.school_name|default:'' }}"
+               placeholder="مثلاً دبیرستان شهید بهشتی">
+      </div>
+
+      <div>
+        <label>کد آموزشگاه</label>
+        <input name="school_code" type="text" required
+               value="{{ request.POST.school_code|default:'' }}"
+               placeholder="مثلاً 123456">
+      </div>
+
+      <div>
+        <label>مقطع تحصیلی</label>
+        <input name="education_level" type="text" required
+               value="{{ request.POST.education_level|default:'' }}"
+               placeholder="مثلاً متوسطه دوم">
+      </div>
+
+      <div>
+        <label>موبایل مدیر</label>
+        <input name="manager_mobile" type="tel" inputmode="tel" required
+               value="{{ request.POST.manager_mobile|default:'' }}"
+               placeholder="مثلاً 09123456789">
+      </div>
+
+      <div class="field-full">
+        <label>نام و نام خانوادگی مدیر</label>
+        <input name="manager_full_name" type="text" required
+               value="{{ request.POST.manager_full_name|default:'' }}"
+               placeholder="مثلاً علی محمدی">
+      </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">✅ ثبت مدرسه و ورود به پنل</button>
+  </form>
+
+  <div class="row">
+    <a class="link" href="{% url 'company_index' %}">بازگشت به سایت شرکت</a>
+    <a class="link" href="{% url 'panel_logout' %}">خروج از حساب</a>
+  </div>
+
+</div>
+
+<script>
+  (function(){
+    const msgs = [];
+    {% if messages %}
+      {% for message in messages %}
+        msgs.push({ level: "{{ message.tags }}", text: "{{ message|escapejs }}" });
+      {% endfor %}
+    {% endif %}
+
+    if (!msgs.length) return;
+
+    const m = msgs[0];
+    let icon = "info";
+    if (m.level.includes("success")) icon = "success";
+    if (m.level.includes("error")) icon = "error";
+    if (m.level.includes("warning")) icon = "warning";
+
+    Swal.fire({
+      icon,
+      title:"پیام سیستم",
+      text:m.text,
+      confirmButtonText:"باشه"
+    });
+  })();
+</script>
+
+</body>
+</html>

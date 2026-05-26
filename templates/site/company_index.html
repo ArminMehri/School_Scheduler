@@ -1,0 +1,675 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>مهرگان تک | راهکارهای هوشمند نرم‌افزاری</title>
+  <script src="{% static 'assets/js/sweetalert2.all.min.js' %}"></script>
+
+  <style>
+
+      /* ===== Announcement Bar ===== */
+
+.top-announcement-bar{
+  position:fixed;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+
+  width:calc(100% - 40px);
+  max-width:1250px;
+
+  z-index:1000;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  overflow:hidden;
+
+  padding:0 18px;
+
+  border-radius:24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(10,18,45,.96),
+      rgba(8,15,35,.92)
+    );
+
+  border:1px solid rgba(90,140,255,.20);
+
+  backdrop-filter:blur(12px);
+
+  box-shadow:
+    0 10px 40px rgba(0,0,0,.35),
+    0 0 25px rgba(79,139,255,.12),
+    inset 0 0 18px rgba(255,255,255,.03);
+
+  text-align:center;
+
+  transition:.25s ease;
+}
+
+/* حالت عکس */
+.top-announcement-bar.has-image{
+  height:88px;
+  padding:0;
+}
+
+/* حالت متن */
+.top-announcement-bar.has-text{
+  height:62px;
+
+  color:#eef4ff;
+
+  font-weight:900;
+  font-size:17px;
+
+  letter-spacing:.2px;
+}
+
+/* عکس */
+.announcement-image{
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+  display:block;
+}
+
+/* متن */
+.announcement-text{
+  flex:1;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+  padding:0 12px;
+}
+
+/* دات چشمک زن */
+.blinking-dot{
+  width:10px;
+  height:10px;
+
+  border-radius:50%;
+
+  background:#35e0ff;
+
+  box-shadow:
+    0 0 10px #35e0ff,
+    0 0 20px rgba(53,224,255,.45);
+
+  animation:blink 1.2s infinite;
+}
+
+@keyframes blink{
+  0%,100%{
+    opacity:1;
+    transform:scale(1);
+  }
+
+  50%{
+    opacity:.35;
+    transform:scale(.8);
+  }
+}
+
+/* فاصله از بالا */
+body.has-announcement{
+  padding-top:110px;
+}
+
+/* موبایل */
+@media (max-width:768px){
+
+  .top-announcement-bar{
+    width:calc(100% - 50px);
+
+    border-radius:18px;
+
+    top:10px;
+  }
+
+  .top-announcement-bar.has-image{
+    height:65px;
+  }
+
+  .top-announcement-bar.has-text{
+    height:58px;
+    font-size:14px;
+  }
+
+  .announcement-image{
+    object-fit:cover;
+  }
+
+  body.has-announcement{
+    padding-top:85px;
+  }
+}
+
+    :root{
+      --bg1:#050816; --bg2:#0b1a3a;
+      --card:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --blue1:#4f8bff; --blue2:#2f6bff;
+      --green1:#19d18c; --green2:#0fb57a;
+      --cyan:#35e0ff;
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:24px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+      background:
+        radial-gradient(1000px 520px at 80% 5%, rgba(53,224,255,.16), transparent 55%),
+        radial-gradient(900px 500px at 15% 85%, rgba(79,139,255,.20), transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      color:var(--text);
+      font-size:17px;
+      min-height:100vh;
+    }
+
+    .wrap{max-width:1200px;margin:0 auto;padding:24px 18px 42px}
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:14px 18px;
+      margin-bottom:20px;
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--border);
+      border-radius:999px;
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(12px);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+    }
+
+    .logo{
+      width:74px;
+      height:62px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(145deg, rgba(12,24,55,.98), rgba(5,10,25,.98));
+      border:1px solid rgba(47,210,210,.35);
+      border-radius:22px;
+      padding:3px;
+      box-shadow:
+        0 12px 35px rgba(0,0,0,.35),
+        0 0 22px rgba(47,210,210,.20),
+        inset 0 0 14px rgba(255,255,255,.04);
+      overflow:hidden;
+      flex-shrink:0;
+    }
+
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      filter:drop-shadow(0 0 3px rgba(47,210,210,.35));
+    }
+
+    .brand .t1{font-size:22px;font-weight:1000;line-height:1.2}
+    .brand .t2{color:var(--muted);font-size:13px;margin-top:5px}
+
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border-radius:999px;
+      padding:12px 18px;
+      border:1px solid transparent;
+      cursor:pointer;
+      font-weight:1000;
+      text-decoration:none;
+      transition:.18s ease;
+      font-size:15px;
+      user-select:none;
+      color:white;
+      white-space:nowrap;
+    }
+
+    .btn-primary{
+      background:linear-gradient(90deg, var(--blue2), var(--blue1));
+      box-shadow:0 14px 35px rgba(60,120,255,.22);
+    }
+
+    .btn-green{
+      background:linear-gradient(90deg, var(--green2), var(--green1));
+      box-shadow:0 14px 35px rgba(20,220,140,.18);
+    }
+
+    .btn-ghost{
+      background:rgba(255,255,255,.07);
+      border-color:rgba(255,255,255,.14);
+      color:var(--text);
+    }
+
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:18px;
+      align-items:stretch;
+    }
+
+    .card{
+      background:linear-gradient(180deg, var(--card), rgba(255,255,255,.055));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .hero-card::before{
+      content:"";
+      position:absolute;
+      width:320px;
+      height:320px;
+      left:-100px;
+      top:-120px;
+      background:radial-gradient(circle, rgba(53,224,255,.20), transparent 60%);
+      pointer-events:none;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 13px;
+      border-radius:999px;
+      background:rgba(53,224,255,.08);
+      border:1px solid rgba(53,224,255,.20);
+      color:#bff8ff;
+      font-weight:1000;
+      font-size:14px;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0 0 12px;
+      font-size:42px;
+      line-height:1.45;
+      letter-spacing:-.5px;
+    }
+
+    .accent{color:var(--cyan)}
+    .sub{color:var(--muted);line-height:2;font-size:17px}
+
+    .hero-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:12px;
+      margin-top:18px;
+    }
+
+    .stat{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.11);
+      background:rgba(255,255,255,.055);
+    }
+
+    .stat .n{font-size:24px;font-weight:1000}
+    .stat .d{color:var(--muted);font-size:13px;margin-top:4px}
+
+    .panel-preview{
+      min-height:100%;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .mini-screen{
+      border-radius:22px;
+      border:1px solid rgba(53,224,255,.20);
+      background:
+        linear-gradient(135deg, rgba(8,16,38,.95), rgba(9,29,63,.70));
+      padding:16px;
+      box-shadow:inset 0 0 26px rgba(255,255,255,.04);
+    }
+
+    .screen-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:14px;
+      color:var(--muted);
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .bars{
+      display:grid;
+      gap:8px;
+    }
+
+    .bar{
+      height:38px;
+      border-radius:14px;
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.09);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 12px;
+      color:#dce8ff;
+      font-weight:900;
+      font-size:13px;
+    }
+
+    .bar span:last-child{color:var(--cyan)}
+
+    .section-title{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:12px;
+      margin:22px 0 14px;
+    }
+
+    .section-title h2{
+      margin:0;
+      font-size:28px;
+    }
+
+    .section-title p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.8;
+    }
+
+    .services{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .service{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      border-radius:22px;
+      padding:18px;
+      transition:.18s ease;
+      min-height:230px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .service:hover{
+      transform:translateY(-3px);
+      border-color:rgba(53,224,255,.30);
+      box-shadow:0 18px 50px rgba(0,0,0,.24), 0 0 22px rgba(53,224,255,.08);
+    }
+
+    .service-icon{
+      width:54px;
+      height:54px;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(53,224,255,.10);
+      border:1px solid rgba(53,224,255,.22);
+      font-size:25px;
+      margin-bottom:12px;
+    }
+
+    .service h3{
+      margin:0 0 8px;
+      font-size:20px;
+    }
+
+    .service p{
+      color:var(--muted);
+      line-height:1.9;
+      margin:0 0 16px;
+      flex:1;
+    }
+
+    .footer{
+      margin-top:20px;
+      color:var(--muted);
+      text-align:center;
+      font-size:14px;
+      line-height:2;
+    }
+
+    @media (max-width:950px){
+      .hero{grid-template-columns:1fr}
+      .services{grid-template-columns:1fr}
+      .stats{grid-template-columns:1fr}
+      .section-title{display:block}
+    }
+
+    @media (max-width:768px){
+      .topbar{
+        flex-direction:column;
+        align-items:stretch;
+        border-radius:28px;
+      }
+
+      .brand{
+        justify-content:center;
+        text-align:center;
+      }
+
+      .nav{
+        justify-content:center;
+      }
+
+      h1{font-size:30px}
+
+      .logo{
+        width:82px;
+        height:62px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    {% if index_title1 and index_title1.announce %}
+  <a href="{{ index_title1.announce_link|default:'#' }}" class="announcement-link" target="_blank" rel="noopener noreferrer">
+    {% if index_title1.announce_img %}
+      <div class="top-announcement-bar has-image" id="announcementBar">
+        <img src="{{ index_title1.announce_img.url }}" alt="اعلان" class="announcement-image" />
+      </div>
+    {% elif index_title1.announce_title %}
+      <div class="top-announcement-bar has-text" id="announcementBar">
+        <div class="blinking-dot"></div>
+        <span class="announcement-text">{{ index_title1.announce_title }}</span>
+        <div class="blinking-dot"></div>
+      </div>
+    {% endif %}
+  </a>
+{% endif %}
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">
+          <img src="{% static 'assets/images/Mehreganlogo.png' %}" alt="Mehrgan Tech Logo">
+        </div>
+        <div>
+          <div class="t1">مهرگان تک (MehreganTec)</div>
+          <div class="t2">راهکارهای هوشمند برای کسب‌وکارها و مدارس</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <a class="btn btn-ghost" href="#services">خدمات</a>
+        <a class="btn btn-ghost" href="{% url 'company_about' %}">درباره ما</a>
+        {% if user.is_authenticated %}
+            <a class="btn btn-primary" href="{% url 'company_dashboard' %}">👤حساب کاربری</a>
+            <a class="btn btn-green" href="{% url 'cart_page' %}">🛒سبد خرید</a>
+        {% else %}
+          <a class="btn btn-primary" href="{% url 'panel_login' %}">ورود</a>
+          <a class="btn btn-primary" href="{% url 'company_register' %}">ثبت‌نام</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="hero">
+      <div class="card hero-card">
+        <div class="eyebrow">🚀 Mehrgan Tech Digital Solutions</div>
+        <h1>
+          طراحی و توسعه
+          <span class="accent">سامانه‌های هوشمند</span>
+          برای مدیریت بهتر
+        </h1>
+
+        <div class="sub">
+          مهرگان تک روی ساخت نرم‌افزارهای کاربردی، پنل‌های مدیریتی، سامانه‌های آموزشی،
+          اتوماسیون مدرسه و ابزارهای اختصاصی کسب‌وکار تمرکز دارد.
+          از این صفحه می‌توانید وارد سرویس‌های مختلف شرکت شوید.
+        </div>
+
+        <div class="hero-actions">
+          <a class="btn btn-green" href="{% url 'site_index' %}">شروع با پنل مدرسه‌ساز</a>
+          <a class="btn btn-ghost" href="#services">مشاهده خدمات</a>
+          <a class="btn btn-primary" href="#" onclick="contactAlert();return false;">درخواست مشاوره</a>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="n">AI</div>
+            <div class="d">راهکارهای هوشمند</div>
+          </div>
+          <div class="stat">
+            <div class="n">Web</div>
+            <div class="d">طراحی سایت و پنل</div>
+          </div>
+          <div class="stat">
+            <div class="n">Edu</div>
+            <div class="d">نرم‌افزارهای آموزشی</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card panel-preview" id="about">
+        <h2 style="margin:0;font-size:26px;">شرکت مهرگان تک</h2>
+        <div class="sub">
+          ما ابزارهایی می‌سازیم که کارهای تکراری را سریع‌تر، دقیق‌تر و قابل مدیریت‌تر کنند.
+        </div>
+
+        <div class="mini-screen">
+          <div class="screen-top">
+            <span>داشبورد خدمات</span>
+            <span>Online</span>
+          </div>
+
+          <div class="bars">
+            <div class="bar"><span>برنامه‌ساز مدارس</span><span>فعال</span></div>
+            <div class="bar"><span>طراحی سایت اختصاصی</span><span>قابل سفارش</span></div>
+            <div class="bar"><span>پنل مدیریتی کسب‌وکار</span><span>قابل سفارش</span></div>
+            <div class="bar"><span>اتوماسیون و گزارش‌گیری</span><span>قابل توسعه</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" id="services">
+      <div>
+        <h2>خدمات مهرگان تک</h2>
+        <p>از این بخش کاربر می‌تواند وارد سرویس یا پنل موردنظر شود.</p>
+      </div>
+    </div>
+
+    <div class="services">
+      <div class="service">
+        <div class="service-icon">🏫</div>
+        <h3>پنل برنامه‌ساز مدارس</h3>
+        <p>
+          ساخت خودکار برنامه هفتگی مدرسه با رعایت حضور دبیرها، ظرفیت کلاس‌ها،
+          جفت‌زنگ‌ها و خروجی اکسل/PDF.
+        </p>
+        <a class="btn btn-green" href="{% url 'site_index' %}">ورود به سرویس</a>
+      </div>
+
+      <div class="service">
+        <div class="service-icon">💻</div>
+        <h3>طراحی سایت و پنل اختصاصی</h3>
+        <p>
+          طراحی وب‌سایت، داشبورد، پنل مدیریت، سیستم ثبت‌نام، فروشگاه و نرم‌افزارهای تحت وب.
+        </p>
+        <a class="btn btn-primary" href="#" onclick="contactAlert();return false;">ثبت درخواست</a>
+      </div>
+
+      <div class="service">
+        <div class="service-icon">⚙️</div>
+        <h3>اتوماسیون و ابزارهای هوشمند</h3>
+        <p>
+          ساخت ابزارهای اختصاصی برای کاهش کارهای دستی، گزارش‌گیری، پردازش داده و مدیریت فرایندها.
+        </p>
+        <a class="btn btn-ghost" href="#" onclick="contactAlert();return false;">مشاوره</a>
+      </div>
+    </div>
+
+    <div class="footer">
+  © 2026 Mehrgan Tech (مهرگان تک) — طراحی و توسعه سامانه‌ها و راهکارهای هوشمند نرم‌افزاری
+  <br>
+  تمامی حقوق مادی و معنوی این وب‌سایت، نرم‌افزارها، خدمات و محتوای ارائه‌شده متعلق به مهرگان تک می‌باشد.
+  <br>
+  All Rights Reserved © Mehrgan Tech Digital Solutions
+</div>
+
+  </div>
+
+<script>
+  function contactAlert(){
+    Swal.fire({
+      icon:"info",
+      title:"درخواست ارتباط با مهرگان تک",
+      html:"<div style='line-height:2'>شماره تماس: <b>09xx...</b><br>ایمیل: <b>info@example.com</b></div>",
+      confirmButtonText:"باشه"
+    });
+  }
+  document.addEventListener("DOMContentLoaded", function() {
+    const bar = document.getElementById("announcementBar");
+    if (bar) {
+      document.body.classList.add("has-announcement");
+    }
+  });
+</script>
+
+</body>
+</html>

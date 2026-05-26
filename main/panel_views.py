@@ -36,6 +36,53 @@ def _require_school(request):
         messages.error(request, "❌ این حساب به هیچ مدرسه‌ای وصل نیست.")
     return school
 
+@login_required
+def school_setup(request):
+    if getattr(request.user, "school", None) is not None:
+        return redirect("panel_dashboard")
+
+    if request.method == "POST":
+        school_name = (request.POST.get("school_name") or "").strip()
+        school_code = (request.POST.get("school_code") or "").strip()
+        education_level = (request.POST.get("education_level") or "").strip()
+        manager_mobile = (request.POST.get("manager_mobile") or "").strip()
+        manager_full_name = (request.POST.get("manager_full_name") or "").strip()
+
+        if not all([school_name, school_code, education_level, manager_mobile, manager_full_name]):
+            messages.error(request, "❌ لطفاً همه اطلاعات مدرسه را کامل کن.")
+            return render(request, "panel/school_setup.html")
+
+        if School.objects.filter(code=school_code).exists():
+            messages.error(request, "❌ این کد آموزشگاه قبلاً ثبت شده.")
+            return render(request, "panel/school_setup.html")
+
+        try:
+            with transaction.atomic():
+                school = School.objects.create(
+                    name=school_name,
+                    code=school_code,
+                    education_level=education_level,
+                    manager_full_name=manager_full_name,
+                    manager_mobile=manager_mobile,
+                )
+
+                request.user.school = school
+
+                if hasattr(request.user, "phone"):
+                    request.user.phone = manager_mobile
+
+                if hasattr(request.user, "full_name"):
+                    request.user.full_name = manager_full_name
+
+                request.user.save()
+
+            messages.success(request, "✅ مدرسه با موفقیت ثبت شد.")
+            return redirect("panel_dashboard")
+
+        except Exception as e:
+            messages.error(request, f"❌ خطا در ثبت مدرسه: {e}")
+
+    return render(request, "panel/school_setup.html")
 
 @require_POST
 @login_required
@@ -133,71 +180,14 @@ def auth_login(request):
 
 
 def auth_register(request):
-    if request.user.is_authenticated:
+    if not request.user.is_authenticated:
+        messages.info(request, "ابتدا حساب کاربری مهرگان تک بساز یا وارد حساب خودت شو.")
+        return redirect("company_register")
+
+    if getattr(request.user, "school", None) is not None:
         return redirect("panel_dashboard")
 
-    if request.method == "POST":
-        User = get_user_model()
-
-        username = (request.POST.get("username") or "").strip()
-        password = (request.POST.get("password") or "").strip()
-        password2 = (request.POST.get("password2") or "").strip()
-
-        school_name = (request.POST.get("school_name") or "").strip()
-        school_code = (request.POST.get("school_code") or "").strip()
-        education_level = (request.POST.get("education_level") or "").strip()
-        manager_mobile = (request.POST.get("manager_mobile") or "").strip()
-        manager_full_name = (request.POST.get("manager_full_name") or "").strip()
-
-        if not all([username, password, password2, school_name, school_code, education_level, manager_mobile, manager_full_name]):
-            messages.error(request, "❌ لطفاً همه فیلدها را کامل کن.")
-            return render(request, "panel/auth_register.html")
-
-        if password != password2:
-            messages.error(request, "❌ رمزها یکی نیستند.")
-            return render(request, "panel/auth_register.html")
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "❌ این نام کاربری قبلاً گرفته شده.")
-            return render(request, "panel/auth_register.html")
-
-        if School.objects.filter(code=school_code).exists():
-            messages.error(request, "❌ این کد آموزشگاه قبلاً ثبت شده.")
-            return render(request, "panel/auth_register.html")
-
-        try:
-            with transaction.atomic():
-                school = School.objects.create(
-                    name=school_name,
-                    code=school_code,
-                    education_level=education_level,
-                    manager_full_name=manager_full_name,
-                    manager_mobile=manager_mobile,
-                )
-
-                user = User.objects.create_user(
-                    username=username,
-                    password=password,
-                )
-
-                if hasattr(user, "school"):
-                    user.school = school
-                if hasattr(user, "phone"):
-                    user.phone = manager_mobile
-                if hasattr(user, "full_name"):
-                    user.full_name = manager_full_name
-
-                user.save()
-
-            login(request, user)
-            messages.success(request, "✅ ثبت نام انجام شد.")
-            return redirect("panel_dashboard")
-
-        except Exception as e:
-            messages.error(request, f"❌ خطا در ثبت نام: {e}")
-            return render(request, "panel/auth_register.html")
-
-    return render(request, "panel/auth_register.html")
+    return redirect("school_setup")
 
 
 @login_required
@@ -209,9 +199,10 @@ def auth_logout(request):
 
 @login_required
 def panel_dashboard(request):
-    school = _require_school(request)
+    school = getattr(request.user, "school", None)
     if school is None:
-        return redirect("panel_logout")
+        messages.info(request, "برای استفاده از پنل برنامه‌ساز، ابتدا اطلاعات مدرسه را تکمیل کن.")
+        return redirect("school_setup")
 
     stats = [
         ("پایه‌ها", Grade.objects.filter(school=school).count(), "grade_list"),

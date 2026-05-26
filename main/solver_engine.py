@@ -329,9 +329,7 @@ def generate_schedule_with_ortools(max_time_seconds=180, school=None, strict_tea
                     w1 = work[(teacher.id, ordered[i].id)]
                     w2 = work[(teacher.id, ordered[i + 1].id)]
                     w3 = work[(teacher.id, ordered[i + 2].id)]
-                    # قانون Hard: اگر w1 و w3 باشند، w2 حتما باید 1 باشد (یعنی نباید خالی باشد)
                     model.AddBoolOr([w1.Not(), w2, w3.Not()])
-                    # (متغیر gap1 دیگر برای امتیازدهی استفاده نمی‌شود چون Hard است)
 
                 # --- گپ 2 تایی: مجاز اما امتیاز منفی شدید (-500) ---
                 if i < len(ordered) - 3:
@@ -344,6 +342,19 @@ def generate_schedule_with_ortools(max_time_seconds=180, school=None, strict_tea
                     model.AddBoolOr([w1.Not(), w2, w3, w4.Not()]).OnlyEnforceIf(gap2.Not())
                     score_terms.append(-W_GAP2 * gap2)
 
+                # --- گپ 3 تایی: جریمه شدید (مثل گپ 2) ---
+                if i < len(ordered) - 4:
+                    w1 = work[(teacher.id, ordered[i].id)]
+                    w2 = work[(teacher.id, ordered[i + 1].id)]
+                    w3 = work[(teacher.id, ordered[i + 2].id)]
+                    w4 = work[(teacher.id, ordered[i + 3].id)]
+                    w5 = work[(teacher.id, ordered[i + 4].id)]
+                    gap3 = model.NewBoolVar(f"gap3_{teacher.id}_{ordered[i].id}")
+                    model.AddBoolAnd([w1, w2.Not(), w3.Not(), w4.Not(), w5]).OnlyEnforceIf(gap3)
+                    model.AddBoolOr([w1.Not(), w2, w3, w4, w5.Not()]).OnlyEnforceIf(gap3.Not())
+                    score_terms.append(-W_GAP2 * gap3)
+
+                # --- triple reward ---
                 if i < len(ordered) - 2:
                     w1 = work[(teacher.id, ordered[i].id)]
                     w2 = work[(teacher.id, ordered[i + 1].id)]
@@ -353,21 +364,23 @@ def generate_schedule_with_ortools(max_time_seconds=180, school=None, strict_tea
                     model.AddBoolOr([w1.Not(), w2.Not(), w3.Not()]).OnlyEnforceIf(triple.Not())
                     score_terms.append(-W_TRIPLE * triple)
 
-                    # --- گپ 4 تایی و بیشتر: ممنوع (Hard) ---
-                    # این حلقه چک می‌کند که بین دو کلاس، فاصله‌ای بیشتر از 4 اسلات خالی وجود نداشته باشد
-                for i in range(len(ordered)):
-                    for j in range(i + 5, len(ordered)):  # اصلاح شده: i+5 تا گپ 4 تایی هم پوشش داده شود
-                        middle = [work[(teacher.id, ordered[k].id)] for k in range(i + 1, j)]
-                        no_middle_work = model.NewBoolVar(
-                            f"no_mid_work_{teacher.id}_{d.id}_{ordered[i].id}_{ordered[j].id}"
-                        )
-                        model.AddBoolAnd([m.Not() for m in middle]).OnlyEnforceIf(no_middle_work)
-                        model.AddBoolOr(middle).OnlyEnforceIf(no_middle_work.Not())
-                        model.AddBoolOr([
-                            work[(teacher.id, ordered[i].id)].Not(),
-                            work[(teacher.id, ordered[j].id)].Not(),
-                            no_middle_work.Not(),
-                        ])
+            # --- گپ 4 تایی و بیشتر: ممنوع (Hard) ---
+            # FIX: این حلقه باید بیرون از for i, sl باشد تا متغیر i بازنویسی نشود
+            for ii in range(len(ordered)):
+                for jj in range(ii + 4, len(ordered)):  # FIX: i+4 به جای i+5
+                    middle = [work[(teacher.id, ordered[k].id)] for k in range(ii + 1, jj)]
+                    if not middle:
+                        continue
+                    no_middle_work = model.NewBoolVar(
+                        f"no_mid_work_{teacher.id}_{d.id}_{ii}_{jj}"
+                    )
+                    model.AddBoolAnd([m.Not() for m in middle]).OnlyEnforceIf(no_middle_work)
+                    model.AddBoolOr(middle).OnlyEnforceIf(no_middle_work.Not())
+                    model.AddBoolOr([
+                        work[(teacher.id, ordered[ii].id)].Not(),
+                        work[(teacher.id, ordered[jj].id)].Not(),
+                        no_middle_work.Not(),
+                    ])
 
     for it in items:
         if it.lesson.allow_without_teacher:

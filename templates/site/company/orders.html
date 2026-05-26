@@ -1,0 +1,94 @@
+{% extends "site/company/base.html" %}
+
+{% block title %}سفارش‌ها | مهرگان تک{% endblock %}
+
+{% block content %}
+
+<div class="card" style="margin-bottom:18px;">
+  <h1>سفارش‌های <span class="accent">من</span></h1>
+  <div class="sub">
+    لیست سفارش‌های ثبت‌شده برای خدمات و سرویس‌های مهرگان تک.
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>شماره سفارش</th>
+          <th>عنوان</th>
+          <th>مبلغ</th>
+          <th>وضعیت</th>
+          <th>تاریخ</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>#{{ order.id }}</td>
+          <td>{{ order.title }}</td>
+          <td>{{ order.total_price }} تومان</td>
+          <td><span class="badge">{{ order.status }}</span></td>
+          <td>{{ order.created_at|date:"Y/m/d" }}</td>
+          <td>
+            <a class="btn btn-ghost btn-sm" href="#">جزئیات</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6">هنوز سفارشی ثبت نشده است.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .table-wrap{overflow-x:auto}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  th,td{
+    padding:14px 12px;
+    text-align:right;
+    border-bottom:1px solid rgba(255,255,255,.09);
+    white-space:nowrap;
+  }
+
+  th{
+    color:#cfe0ff;
+    background:rgba(255,255,255,.045);
+    font-size:14px;
+  }
+
+  td{
+    color:rgba(255,255,255,.86);
+  }
+
+  .badge{
+    display:inline-flex;
+    padding:7px 10px;
+    border-radius:999px;
+    background:rgba(53,224,255,.10);
+    color:#c8f8ff;
+    border:1px solid rgba(53,224,255,.22);
+    font-weight:1000;
+    font-size:12px;
+  }
+
+  .btn-sm{
+    padding:8px 13px;
+    font-size:13px;
+  }
+</style>
+{% endblock %}

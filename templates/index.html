@@ -47,12 +47,94 @@
       box-shadow: var(--shadow);
     }
     .brand{display:flex; align-items:center; gap:12px;}
-    .logo{
-      width:40px;height:40px;border-radius:14px;
-      background: radial-gradient(circle at 30% 20%, rgba(120,150,255,.95), rgba(50,90,255,.55));
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow: 0 12px 35px rgba(60,120,255,.22);
-    }
+    .brand{
+  display:flex;
+  align-items:center;
+  gap:18px;
+  min-width:0;
+}
+
+.logo{
+  width:66px;
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:linear-gradient(145deg, rgba(12,24,55,.98), rgba(5,10,25,.98));
+  border:1px solid rgba(47,210,210,.35);
+  border-radius:22px;
+
+  padding:2px 0.5px;
+  box-shadow:
+    0 12px 35px rgba(0,0,0,.35),
+    0 0 22px rgba(47,210,210,.20),
+    inset 0 0 14px rgba(255,255,255,.04);
+
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+
+.logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+  filter:drop-shadow(0 0 2px rgba(47,210,210,.35));
+}
+
+/* متن کنار لوگو */
+.brand-text{
+  min-width:0;
+}
+
+.brand .t1{
+  font-size:24px;
+  font-weight:1000;
+  margin-bottom:6px;
+}
+
+.brand .t2{
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.8;
+}
+
+/* موبایل */
+@media (max-width:768px){
+  .topbar{
+    flex-direction:column;
+    align-items:stretch;
+    border-radius:28px;
+    gap:16px;
+  }
+
+  .brand{
+    width:100%;
+    min-width:0;
+    justify-content:center;
+  }
+
+  .logo{
+    width:90px;
+    height:60px;
+  }
+
+  .brand .t1{
+    font-size:17px;
+    white-space:normal;
+  }
+
+  .brand .t2{
+    font-size:12px;
+    white-space:normal;
+  }
+
+  .userbox{
+    justify-content:center;
+  }
+}
     .brand .t1{font-weight:1000; line-height:1.2}
     .brand .t2{color:var(--muted); font-size:13px; margin-top:2px}
 
@@ -172,74 +254,148 @@
       font-size:14px;
       line-height:2;
     }
-    /* نوار اعلان */
-.top-announcement-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 99%;
-  z-index: 1000;
-  background-color: rgb(255, 175, 2);
-  box-shadow: 0 2px 5px rgb(0, 0, 0);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 15px;
-  text-align: center;
+/* ===== Announcement Bar ===== */
+
+.top-announcement-bar{
+  position:fixed;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+
+  width:calc(100% - 40px);
+  max-width:1250px;
+
+  z-index:1000;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  overflow:hidden;
+
+  padding:0 18px;
+
+  border-radius:24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(10,18,45,.96),
+      rgba(8,15,35,.92)
+    );
+
+  border:1px solid rgba(90,140,255,.20);
+
+  backdrop-filter:blur(12px);
+
+  box-shadow:
+    0 10px 40px rgba(0,0,0,.35),
+    0 0 25px rgba(79,139,255,.12),
+    inset 0 0 18px rgba(255,255,255,.03);
+
+  text-align:center;
+
+  transition:.25s ease;
 }
 
 /* حالت عکس */
-.top-announcement-bar.has-image {
-  height: 80px; /* ارتفاع ثابت برای عکس */
+.top-announcement-bar.has-image{
+  height:88px;
+  padding:0;
 }
 
 /* حالت متن */
-.top-announcement-bar.has-text {
-  height: 60px; /* ارتفاع کمتر برای متن */
-  font-weight: bold;
-  font-size: 18px;
-  color: #000000;
+.top-announcement-bar.has-text{
+  height:62px;
+
+  color:#eef4ff;
+
+  font-weight:900;
+  font-size:17px;
+
+  letter-spacing:.2px;
 }
 
-/* عکس بنر */
-.announcement-image {
-  width: 100%;
-  max-width: 1400px; /* حداکثر عرض عکس */
-  height: 80px;       /* ارتفاع ثابت */
-  object-fit: cover;
-  display: block;
-  margin: 0 auto;
+/* عکس */
+.announcement-image{
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+  display:block;
 }
 
-/* متن اعلان */
-.announcement-text {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 0 10px;
-  line-height: 60px;
+/* متن */
+.announcement-text{
+  flex:1;
+
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+
+  padding:0 12px;
 }
 
-/* دایره چشمک زن کنار متن */
-.blinking-dot {
-  width: 8px;
-  height: 8px;
-  background-color: red;
-  border-radius: 50%;
-  margin: 0 8px;
-  animation: blink 1s infinite;
+/* دات چشمک زن */
+.blinking-dot{
+  width:10px;
+  height:10px;
+
+  border-radius:50%;
+
+  background:#35e0ff;
+
+  box-shadow:
+    0 0 10px #35e0ff,
+    0 0 20px rgba(53,224,255,.45);
+
+  animation:blink 1.2s infinite;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+@keyframes blink{
+  0%,100%{
+    opacity:1;
+    transform:scale(1);
+  }
+
+  50%{
+    opacity:.35;
+    transform:scale(.8);
+  }
 }
 
-/* فاصله از بالا برای بدنه */
-body.has-announcement {
-  padding-top: 80px; /* ارتفاع بیشتر برای عکس */
+/* فاصله از بالا */
+body.has-announcement{
+  padding-top:110px;
+}
+
+/* موبایل */
+@media (max-width:768px){
+
+  .top-announcement-bar{
+    width:calc(100% - 50px);
+
+    border-radius:18px;
+
+    top:10px;
+  }
+
+  .top-announcement-bar.has-image{
+    height:65px;
+  }
+
+  .top-announcement-bar.has-text{
+    height:58px;
+    font-size:14px;
+  }
+
+  .announcement-image{
+    object-fit:cover;
+  }
+
+  body.has-announcement{
+    padding-top:85px;
+  }
 }
 
 /* واکنش‌گرایی */
@@ -269,9 +425,25 @@ body.has-announcement {
   </style>
     <script>
   // وقتی صفحه لود شد، به body کلاس اضافه کن تا فضای بالا ایجاد بشه
-  document.addEventListener("DOMContentLoaded", function() {
-    document.body.classList.add("has-announcement");
+   document.addEventListener("DOMContentLoaded", function() {
+    const bar = document.getElementById("announcementBar");
+
+    if (bar) {
+      document.body.classList.add("has-announcement");
+    } else {
+      document.body.classList.remove("has-announcement");
+    }
   });
+
+  function closeAnnouncement() {
+    const bar = document.getElementById("announcementBar");
+
+    if (bar) {
+      bar.style.display = "none";
+    }
+
+    document.body.classList.remove("has-announcement");
+  }
 
   // تابع برای بستن نوار و حذف فضای بالا
   function closeAnnouncement() {
@@ -300,10 +472,12 @@ body.has-announcement {
 {% endif %}
     <div class="topbar">
       <div class="brand">
-        <div class="logo"></div>
+        <div class="logo">
+            <img src="{% static 'assets/images/Mehreganlogo.png' %}" alt="Mehrgan Tech Logo">
+          </div>
         <div>
-          <div class="t1">برنامه‌ساز حرفه‌ای مدارس</div>
-          <div class="t2">ساخت برنامه کلاسی با رعایت قوانین + خروجی اکسل/PDF</div>
+          <div class="t1">مهرگان تک (MehreganTec)</div>
+          <div class="t2">برنامه‌ساز حرفه‌ای مدارس</div>
         </div>
       </div>
 
@@ -313,7 +487,7 @@ body.has-announcement {
           <a class="btn btn-ghost" href="{% url 'panel_logout' %}" data-logout>خروج</a>
         {% else %}
           <a class="btn btn-primary" href="{% url 'panel_login' %}">ورود</a>
-          <a class="btn btn-ghost" href="{% url 'panel_register' %}">ثبت‌نام</a>
+          <a class="btn btn-primary" href="{% url 'panel_register' %}">ثبت‌نام</a>
         {% endif %}
       </div>
     </div>
@@ -417,9 +591,12 @@ body.has-announcement {
     </div>
 
     <div class="footer">
-      © برنامه‌ساز مدارس — این متن را می‌توانی عوض کنی<br>
-      ساخته شده برای مدیریت سریع و دقیق برنامه‌های هفتگی
-    </div>
+  © 2026 Mehrgan Tech (مهرگان تک) — طراحی و توسعه سامانه‌ها و راهکارهای هوشمند نرم‌افزاری
+  <br>
+  تمامی حقوق مادی و معنوی این وب‌سایت، نرم‌افزارها، خدمات و محتوای ارائه‌شده متعلق به مهرگان تک می‌باشد.
+  <br>
+  All Rights Reserved © Mehrgan Tech Digital Solutions
+</div>
 
   </div>
 

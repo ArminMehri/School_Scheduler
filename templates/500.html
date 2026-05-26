@@ -1,0 +1,366 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>خطای سرور | مهرگان تک</title>
+
+  <style>
+    :root{
+      --bg1:#050816;
+      --bg2:#0b1a3a;
+
+      --card:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.12);
+
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+
+      --blue1:#4f8bff;
+      --blue2:#2f6bff;
+
+      --red1:#ff4d6d;
+      --red2:#ff2f4f;
+
+      --cyan:#35e0ff;
+
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      padding:22px;
+
+      font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+
+      color:var(--text);
+
+      background:
+        radial-gradient(1000px 520px at 80% 5%, rgba(255,60,100,.12), transparent 55%),
+        radial-gradient(900px 500px at 15% 85%, rgba(79,139,255,.18), transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+
+    .box{
+      width:100%;
+      max-width:760px;
+
+      text-align:center;
+
+      padding:36px 24px;
+
+      border-radius:30px;
+
+      background:
+        linear-gradient(
+          180deg,
+          var(--card),
+          rgba(255,255,255,.05)
+        );
+
+      border:1px solid var(--border);
+
+      box-shadow:var(--shadow);
+
+      backdrop-filter:blur(12px);
+
+      position:relative;
+      overflow:hidden;
+    }
+
+    .box::before{
+      content:"";
+
+      position:absolute;
+
+      width:340px;
+      height:340px;
+
+      top:-150px;
+      right:-120px;
+
+      background:
+        radial-gradient(
+          circle,
+          rgba(255,70,110,.18),
+          transparent 65%
+        );
+    }
+
+    .logo{
+      width:92px;
+      height:74px;
+
+      margin:0 auto 14px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(12,24,55,.98),
+          rgba(5,10,25,.98)
+        );
+
+      border:1px solid rgba(47,210,210,.35);
+
+      border-radius:24px;
+
+      padding:4px;
+
+      box-shadow:
+        0 12px 35px rgba(0,0,0,.35),
+        0 0 22px rgba(47,210,210,.20),
+        inset 0 0 14px rgba(255,255,255,.04);
+
+      overflow:hidden;
+
+      position:relative;
+      z-index:1;
+    }
+
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+    }
+
+    .code{
+      font-size:90px;
+      line-height:1;
+
+      font-weight:1000;
+
+      letter-spacing:4px;
+
+      color:transparent;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--red1),
+          #ffffff,
+          var(--red2)
+        );
+
+      -webkit-background-clip:text;
+      background-clip:text;
+
+      text-shadow:
+        0 0 35px rgba(255,80,110,.18);
+
+      position:relative;
+      z-index:1;
+    }
+
+    h1{
+      margin:14px 0 10px;
+
+      font-size:30px;
+
+      position:relative;
+      z-index:1;
+    }
+
+    p{
+      margin:0 auto 24px;
+
+      max-width:560px;
+
+      color:var(--muted);
+
+      line-height:2;
+
+      font-size:16px;
+
+      position:relative;
+      z-index:1;
+    }
+
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+
+      padding:10px 16px;
+
+      border-radius:999px;
+
+      margin-bottom:18px;
+
+      background:rgba(255,70,110,.08);
+
+      border:1px solid rgba(255,70,110,.18);
+
+      color:#ffd6de;
+
+      font-weight:900;
+
+      position:relative;
+      z-index:1;
+    }
+
+    .dot{
+      width:10px;
+      height:10px;
+
+      border-radius:50%;
+
+      background:#ff4d6d;
+
+      box-shadow:
+        0 0 12px #ff4d6d;
+    }
+
+    .actions{
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+
+      position:relative;
+      z-index:1;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+
+      border-radius:999px;
+
+      padding:12px 18px;
+
+      border:1px solid transparent;
+
+      color:white;
+
+      text-decoration:none;
+
+      font-weight:1000;
+
+      transition:.18s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.04);
+    }
+
+    .btn-primary{
+      background:
+        linear-gradient(
+          90deg,
+          var(--blue2),
+          var(--blue1)
+        );
+
+      box-shadow:
+        0 14px 35px rgba(60,120,255,.22);
+    }
+
+    .btn-danger{
+      background:
+        linear-gradient(
+          90deg,
+          var(--red2),
+          var(--red1)
+        );
+
+      box-shadow:
+        0 14px 35px rgba(255,70,110,.20);
+    }
+
+    .btn-ghost{
+      background:rgba(255,255,255,.07);
+
+      border-color:rgba(255,255,255,.14);
+
+      color:var(--text);
+    }
+
+    .footer-note{
+      margin-top:22px;
+
+      color:rgba(255,255,255,.45);
+
+      font-size:13px;
+
+      line-height:2;
+
+      position:relative;
+      z-index:1;
+    }
+
+    @media(max-width:600px){
+
+      .code{
+        font-size:68px;
+      }
+
+      h1{
+        font-size:24px;
+      }
+
+      .box{
+        padding:28px 18px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="box">
+
+    <div class="logo">
+      <img src="{% static 'assets/images/Mehreganlogo.png' %}" alt="Mehrgan Tech Logo">
+    </div>
+
+    <div class="status">
+      <span class="dot"></span>
+      <span>Server Error</span>
+    </div>
+
+    <div class="code">500</div>
+
+    <h1>خطای داخلی سرور</h1>
+
+    <p>
+      در پردازش درخواست شما مشکلی در سمت سرور رخ داده است.
+      تیم مهرگان تک در حال بررسی مشکل می‌باشد.
+      لطفاً چند دقیقه بعد دوباره تلاش کنید.
+    </p>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="{% url 'company_index' %}">
+        صفحه اصلی
+      </a>
+
+      <a class="btn btn-ghost" href="javascript:location.reload()">
+        تلاش مجدد
+      </a>
+    </div>
+
+    <div class="footer-note">
+      Mehrgan Tech — Smart Digital Solutions
+    </div>
+
+  </main>
+
+</body>
+</html>

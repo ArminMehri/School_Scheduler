@@ -1,0 +1,182 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>مدیریت اکانت‌ها | مهرگان تک</title>
+  <script src="{% static 'assets/js/sweetalert2.all.min.js' %}"></script>
+
+  <style>
+    :root{
+      --bg1:#050816;--bg2:#0b1a3a;--card:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.12);--text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);--blue1:#4f8bff;--blue2:#2f6bff;
+      --green1:#19d18c;--green2:#0fb57a;--red1:#ff4d6d;--cyan:#35e0ff;
+      --shadow:0 18px 60px rgba(0,0,0,.35);--radius:24px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;color:var(--text);
+      background:
+        radial-gradient(1000px 520px at 80% 5%, rgba(53,224,255,.16), transparent 55%),
+        radial-gradient(900px 500px at 15% 85%, rgba(79,139,255,.20), transparent 55%),
+        linear-gradient(160deg,var(--bg1),var(--bg2));
+      min-height:100vh;
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:24px 18px 42px}
+    .topbar,.card{
+      background:linear-gradient(180deg,var(--card),rgba(255,255,255,.055));
+      border:1px solid var(--border);box-shadow:var(--shadow);backdrop-filter:blur(12px);
+    }
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      padding:14px 18px;margin-bottom:20px;border-radius:999px;
+    }
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo{
+      width:74px;height:62px;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(145deg,rgba(12,24,55,.98),rgba(5,10,25,.98));
+      border:1px solid rgba(47,210,210,.35);border-radius:22px;padding:3px;overflow:hidden;
+    }
+    .logo img{width:100%;height:100%;object-fit:contain}
+    .t1{font-size:22px;font-weight:1000}.t2{color:var(--muted);font-size:13px;margin-top:5px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+      padding:11px 16px;border:1px solid transparent;color:white;text-decoration:none;
+      font-weight:1000;cursor:pointer;transition:.18s ease;font-size:14px;
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    .btn-primary{background:linear-gradient(90deg,var(--blue2),var(--blue1))}
+    .btn-green{background:linear-gradient(90deg,var(--green2),var(--green1))}
+    .btn-danger{background:linear-gradient(90deg,#ff2f4f,#ff6b85)}
+    .btn-ghost{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.14);color:var(--text)}
+    .card{border-radius:var(--radius);padding:22px;margin-bottom:18px}
+    h1{margin:0 0 10px;font-size:32px}.sub{color:var(--muted);line-height:2}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+    .stat{padding:16px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.11)}
+    .stat .n{font-size:26px;font-weight:1000;color:#dffbff}.stat .d{color:var(--muted);font-size:13px;margin-top:5px}
+    .toolbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    .search{
+      min-width:260px;flex:1;border:1px solid rgba(255,255,255,.14);border-radius:999px;
+      background:rgba(255,255,255,.07);color:var(--text);padding:13px 16px;outline:none;
+    }
+    table{width:100%;border-collapse:collapse;overflow:hidden}
+    th,td{padding:14px 12px;text-align:right;border-bottom:1px solid rgba(255,255,255,.09)}
+    th{color:#cfe0ff;font-size:14px;background:rgba(255,255,255,.045)}
+    td{color:rgba(255,255,255,.86)}
+    .badge{padding:7px 10px;border-radius:999px;font-size:12px;font-weight:1000;display:inline-flex}
+    .active{background:rgba(25,209,140,.13);color:#a8ffd9;border:1px solid rgba(25,209,140,.25)}
+    .blocked{background:rgba(255,77,109,.12);color:#ffd1da;border:1px solid rgba(255,77,109,.25)}
+    .admin{background:rgba(53,224,255,.10);color:#c8f8ff;border:1px solid rgba(53,224,255,.25)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    @media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.table-wrap{overflow-x:auto}.topbar{border-radius:28px;flex-direction:column}}
+    @media(max-width:600px){.stats{grid-template-columns:1fr}h1{font-size:26px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo"><img src="{% static 'assets/images/Mehreganlogo.png' %}" alt="Mehrgan Tech"></div>
+      <div>
+        <div class="t1">مدیریت اکانت‌های مهرگان تک</div>
+        <div class="t2">کنترل کاربران، وضعیت حساب‌ها و دسترسی‌ها</div>
+      </div>
+    </div>
+    <a class="btn btn-ghost" href="{% url 'company_index' %}">بازگشت به سایت</a>
+  </div>
+
+  <div class="card">
+    <h1>مدیریت اکانت‌ها</h1>
+    <div class="sub">در این بخش می‌توانید حساب‌های کاربری سایت شرکت را بررسی و مدیریت کنید.</div>
+
+    <div class="stats">
+      <div class="stat"><div class="n">{{ total_users|default:"0" }}</div><div class="d">کل کاربران</div></div>
+      <div class="stat"><div class="n">{{ active_users|default:"0" }}</div><div class="d">کاربران فعال</div></div>
+      <div class="stat"><div class="n">{{ staff_users|default:"0" }}</div><div class="d">مدیران / کارکنان</div></div>
+      <div class="stat"><div class="n">{{ blocked_users|default:"0" }}</div><div class="d">حساب‌های غیرفعال</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <input class="search" id="userSearch" type="text" placeholder="جستجو بر اساس نام کاربری، ایمیل یا شماره...">
+      <a class="btn btn-green" href="#">افزودن اکانت جدید</a>
+    </div>
+
+    <div class="table-wrap">
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th>کاربر</th>
+            <th>ایمیل</th>
+            <th>شماره</th>
+            <th>نقش</th>
+            <th>وضعیت</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.email|default:"-" }}</td>
+            <td>{{ u.phone|default:"-" }}</td>
+            <td>
+              {% if u.is_staff %}
+                <span class="badge admin">مدیر</span>
+              {% else %}
+                <span class="badge">کاربر</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.is_active %}
+                <span class="badge active">فعال</span>
+              {% else %}
+                <span class="badge blocked">غیرفعال</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="actions">
+                <a class="btn btn-primary" href="#">ویرایش</a>
+                <a class="btn btn-ghost" href="#">جزئیات</a>
+                <button class="btn btn-danger" onclick="confirmBlock('{{ u.username }}')">غیرفعال‌سازی</button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">هنوز کاربری ثبت نشده است.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function confirmBlock(username){
+  Swal.fire({
+    icon:"warning",
+    title:"غیرفعال‌سازی حساب",
+    text:"آیا از غیرفعال کردن حساب " + username + " مطمئن هستید؟",
+    showCancelButton:true,
+    confirmButtonText:"بله",
+    cancelButtonText:"لغو",
+    reverseButtons:true
+  });
+}
+
+document.getElementById("userSearch").addEventListener("keyup", function(){
+  const q = this.value.toLowerCase();
+  document.querySelectorAll("#usersTable tbody tr").forEach(row=>{
+    row.style.display = row.innerText.toLowerCase().includes(q) ? "" : "none";
+  });
+});
+</script>
+</body>
+</html>

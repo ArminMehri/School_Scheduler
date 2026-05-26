@@ -1,0 +1,653 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>درباره ما | مهرگان تک</title>
+
+  <style>
+    :root{
+      --bg1:#050816;
+      --bg2:#0b1a3a;
+
+      --card:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.12);
+
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+
+      --blue1:#4f8bff;
+      --blue2:#2f6bff;
+
+      --green1:#19d18c;
+      --green2:#0fb57a;
+
+      --cyan:#35e0ff;
+
+      --shadow:0 18px 60px rgba(0,0,0,.35);
+      --radius:24px;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    html{
+      scroll-behavior:smooth;
+    }
+
+    body{
+      margin:0;
+
+      font-family:"Vazirmatn","Vazir",Tahoma,Arial,sans-serif;
+
+      background:
+        radial-gradient(1000px 520px at 80% 5%, rgba(53,224,255,.16), transparent 55%),
+        radial-gradient(900px 500px at 15% 85%, rgba(79,139,255,.20), transparent 55%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+
+      color:var(--text);
+
+      min-height:100vh;
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:24px 18px 40px;
+    }
+
+    /* ===== TOPBAR ===== */
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+
+      padding:14px 18px;
+
+      margin-bottom:20px;
+
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255,255,255,.08),
+          rgba(255,255,255,.04)
+        );
+
+      border:1px solid var(--border);
+
+      border-radius:999px;
+
+      box-shadow:var(--shadow);
+
+      backdrop-filter:blur(12px);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .logo{
+      width:74px;
+      height:62px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(12,24,55,.98),
+          rgba(5,10,25,.98)
+        );
+
+      border:1px solid rgba(47,210,210,.35);
+
+      border-radius:22px;
+
+      padding:3px;
+
+      box-shadow:
+        0 12px 35px rgba(0,0,0,.35),
+        0 0 22px rgba(47,210,210,.20),
+        inset 0 0 14px rgba(255,255,255,.04);
+
+      overflow:hidden;
+    }
+
+    .logo img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+
+    .brand .t1{
+      font-size:22px;
+      font-weight:1000;
+      line-height:1.2;
+    }
+
+    .brand .t2{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:5px;
+    }
+
+    .nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    /* ===== BUTTONS ===== */
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+
+      padding:12px 18px;
+
+      border-radius:999px;
+
+      text-decoration:none;
+
+      font-weight:1000;
+
+      transition:.18s ease;
+
+      border:1px solid transparent;
+
+      color:white;
+    }
+
+    .btn:hover{
+      transform:translateY(-1px);
+      filter:brightness(1.05);
+    }
+
+    .btn-primary{
+      background:
+        linear-gradient(
+          90deg,
+          var(--blue2),
+          var(--blue1)
+        );
+
+      box-shadow:
+        0 14px 35px rgba(60,120,255,.22);
+    }
+
+    .btn-green{
+      background:
+        linear-gradient(
+          90deg,
+          var(--green2),
+          var(--green1)
+        );
+
+      box-shadow:
+        0 14px 35px rgba(20,220,140,.18);
+    }
+
+    .btn-ghost{
+      background:rgba(255,255,255,.07);
+
+      border-color:rgba(255,255,255,.14);
+
+      color:var(--text);
+    }
+
+    /* ===== HERO ===== */
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .card{
+      background:
+        linear-gradient(
+          180deg,
+          var(--card),
+          rgba(255,255,255,.055)
+        );
+
+      border:1px solid var(--border);
+
+      border-radius:var(--radius);
+
+      box-shadow:var(--shadow);
+
+      padding:24px;
+
+      overflow:hidden;
+
+      position:relative;
+    }
+
+    .hero-card::before{
+      content:"";
+
+      position:absolute;
+
+      width:340px;
+      height:340px;
+
+      left:-120px;
+      top:-140px;
+
+      background:
+        radial-gradient(
+          circle,
+          rgba(53,224,255,.18),
+          transparent 60%
+        );
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+
+      padding:9px 13px;
+
+      border-radius:999px;
+
+      background:rgba(53,224,255,.08);
+
+      border:1px solid rgba(53,224,255,.20);
+
+      color:#bff8ff;
+
+      font-weight:1000;
+
+      font-size:14px;
+
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0 0 14px;
+
+      font-size:42px;
+
+      line-height:1.4;
+    }
+
+    .accent{
+      color:var(--cyan);
+    }
+
+    .sub{
+      color:var(--muted);
+
+      line-height:2;
+
+      font-size:17px;
+    }
+
+    /* ===== FEATURES ===== */
+
+    .features{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:14px;
+
+      margin-top:18px;
+    }
+
+    .feature{
+      border:1px solid rgba(255,255,255,.11);
+
+      background:rgba(255,255,255,.05);
+
+      border-radius:20px;
+
+      padding:18px;
+    }
+
+    .feature .icon{
+      width:52px;
+      height:52px;
+
+      border-radius:18px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      background:rgba(53,224,255,.10);
+
+      border:1px solid rgba(53,224,255,.20);
+
+      font-size:24px;
+
+      margin-bottom:12px;
+    }
+
+    .feature h3{
+      margin:0 0 8px;
+      font-size:20px;
+    }
+
+    .feature p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.9;
+    }
+
+    /* ===== STORY ===== */
+
+    .story{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+
+      margin-top:18px;
+    }
+
+    .section-title{
+      margin:0 0 14px;
+      font-size:28px;
+    }
+
+    .list{
+      display:grid;
+      gap:12px;
+    }
+
+    .list-item{
+      padding:14px 16px;
+
+      border-radius:18px;
+
+      border:1px solid rgba(255,255,255,.10);
+
+      background:rgba(255,255,255,.05);
+
+      line-height:1.9;
+    }
+
+    .list-item strong{
+      color:#d8f6ff;
+    }
+
+    /* ===== FOOTER ===== */
+
+    .footer{
+      margin-top:22px;
+
+      color:var(--muted);
+
+      text-align:center;
+
+      font-size:14px;
+
+      line-height:2;
+    }
+
+    /* ===== RESPONSIVE ===== */
+
+    @media(max-width:950px){
+
+      .hero{
+        grid-template-columns:1fr;
+      }
+
+      .features{
+        grid-template-columns:1fr;
+      }
+
+      .story{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media(max-width:768px){
+
+      .topbar{
+        flex-direction:column;
+        align-items:stretch;
+
+        border-radius:28px;
+      }
+
+      .brand{
+        justify-content:center;
+        text-align:center;
+      }
+
+      .nav{
+        justify-content:center;
+      }
+
+      h1{
+        font-size:30px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <!-- ===== TOPBAR ===== -->
+
+  <div class="topbar">
+
+    <div class="brand">
+
+      <div class="logo">
+        <img src="{% static 'assets/images/Mehreganlogo.png' %}" alt="Mehrgan Tech">
+      </div>
+
+      <div>
+        <div class="t1">مهرگان تک (MehreganTec)</div>
+        <div class="t2">راهکارهای هوشمند برای کسب‌وکارها و مدارس</div>
+      </div>
+
+    </div>
+
+    <div class="nav">
+      <a class="btn btn-ghost" href="{% url 'company_index' %}">صفحه اصلی</a>
+      <a class="btn btn-primary" href="{% url 'site_index' %}">پنل مدرسه‌ساز</a>
+    </div>
+
+  </div>
+
+  <!-- ===== HERO ===== -->
+
+  <div class="hero">
+
+    <div class="card hero-card">
+
+      <div class="eyebrow">
+        🚀 About Mehrgan Tech
+      </div>
+
+      <h1>
+        درباره
+        <span class="accent">مهرگان تک</span>
+      </h1>
+
+      <div class="sub">
+
+        مهرگان تک یک مجموعه فعال در زمینه طراحی و توسعه نرم‌افزارهای تحت وب،
+        سامانه‌های مدیریتی، اتوماسیون و راهکارهای هوشمند دیجیتال است.
+
+        <br><br>
+
+        تمرکز اصلی ما روی ساخت سیستم‌هایی است که باعث افزایش سرعت،
+        دقت و مدیریت بهتر فرآیندها شوند؛
+        از سامانه‌های آموزشی و برنامه‌ساز مدارس گرفته تا داشبوردهای مدیریتی و ابزارهای اختصاصی کسب‌وکار.
+
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h2 class="section-title">
+        هدف ما
+      </h2>
+
+      <div class="sub">
+
+        ما باور داریم نرم‌افزار باید کارها را ساده‌تر کند،
+        نه پیچیده‌تر.
+
+        <br><br>
+
+        به همین دلیل سعی می‌کنیم رابط‌های کاربری مدرن،
+        عملکرد سریع،
+        امنیت مناسب
+        و تجربه کاربری حرفه‌ای را در پروژه‌های خود پیاده‌سازی کنیم.
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===== FEATURES ===== -->
+
+  <div class="features">
+
+    <div class="feature">
+
+      <div class="icon">🏫</div>
+
+      <h3>سامانه‌های آموزشی</h3>
+
+      <p>
+        طراحی نرم‌افزارهای مدیریت مدارس،
+        برنامه‌ساز هوشمند،
+        سیستم حضور و غیاب،
+        کارنامه و داشبورد آموزشی.
+      </p>
+
+    </div>
+
+    <div class="feature">
+
+      <div class="icon">💻</div>
+
+      <h3>طراحی وب و پنل</h3>
+
+      <p>
+        طراحی وب‌سایت اختصاصی،
+        پنل مدیریت،
+        فروشگاه اینترنتی،
+        داشبورد و سیستم‌های تحت وب.
+      </p>
+
+    </div>
+
+    <div class="feature">
+
+      <div class="icon">⚙️</div>
+
+      <h3>اتوماسیون هوشمند</h3>
+
+      <p>
+        توسعه ابزارهای اختصاصی
+        برای خودکارسازی فرآیندها،
+        مدیریت داده و گزارش‌گیری حرفه‌ای.
+      </p>
+
+    </div>
+
+  </div>
+
+  <!-- ===== STORY ===== -->
+
+  <div class="story">
+
+    <div class="card">
+
+      <h2 class="section-title">
+        چرا مهرگان تک؟
+      </h2>
+
+      <div class="list">
+
+        <div class="list-item">
+          <strong>رابط کاربری مدرن</strong><br>
+          طراحی ظاهری حرفه‌ای با تجربه کاربری روان و سریع.
+        </div>
+
+        <div class="list-item">
+          <strong>توسعه اختصاصی</strong><br>
+          امکان طراحی سیستم متناسب با نیاز دقیق مجموعه شما.
+        </div>
+
+        <div class="list-item">
+          <strong>پشتیبانی و توسعه</strong><br>
+          قابلیت توسعه و بهبود پروژه‌ها در آینده.
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h2 class="section-title">
+        فناوری‌های مورد استفاده
+      </h2>
+
+      <div class="list">
+
+        <div class="list-item">
+          <strong>Backend:</strong>
+          Django / Python
+        </div>
+
+        <div class="list-item">
+          <strong>Frontend:</strong>
+          HTML / CSS / JavaScript
+        </div>
+
+        <div class="list-item">
+          <strong>UI/UX:</strong>
+          Responsive + Modern Design
+        </div>
+
+        <div class="list-item">
+          <strong>Deployment:</strong>
+          Linux / Nginx / Cloud
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+
+  <div class="footer">
+
+    ©Copyright-2026 مهرگان تک — طراحی و توسعه راهکارهای نرم‌افزاری
+    <br>
+    تمامی حقوق مادی و معنوی این وب‌سایت، خدمات و نرم‌افزارها متعلق به مهرگان تک می‌باشد.
+    <br>
+    Mehrgan Tech Digital Solutions — All Rights Reserved
+
+  </div>
+
+</div>
+
+</body>
+</html>
