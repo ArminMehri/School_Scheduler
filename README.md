@@ -1,58 +1,110 @@
-School Timetable Scheduler
+🎓 School Timetable Scheduler
 
-Automated timetable generator for schools with teacher availability, lesson priorities, and weekly hours. Generates conflict-free schedules and provides detailed logs.
---------------------------------------------------------------------------------------
-Features:
+An intelligent school timetable generation system built with Django that automatically creates conflict-free schedules while considering teacher availability, lesson priorities, and weekly teaching hours.
 
-Automatically generates class schedules
+Designed for schools that need a fast, reliable, and automated scheduling solution.
 
-Considers teacher availability and weekly hours
+✨ Features
+📅 Automatic Timetable Generation
 
-Prioritizes lessons based on difficulty
+Generate complete weekly schedules with a single click.
 
-Avoids conflicts in classes and teachers
+👨‍🏫 Teacher Availability Management
 
-Interactive web interface for viewing, printing, and clearing logs
+Assign availability for each teacher and ensure schedules respect their working hours.
 
-Supports right-to-left languages (Persian)
+📚 Lesson Priority System
 
-Export Timetable Schedule To Excel 
+Prioritize important or difficult subjects for better timetable distribution.
 
-You can Check the logs (The Errors in the logs page)
---------------------------------------------------------------------------------------
-Installation:
+🚫 Conflict Detection & Prevention
 
-git clone https://github.com/ArminMehri/School_Scheduler.git
+Automatically prevents:
 
-cd REPOSITORY
+Teacher overlaps
+Class overlaps
+Invalid period assignments
+Weekly hour violations
+📊 Detailed Scheduling Logs
 
-python -m venv venv
+Track scheduling decisions and diagnose problems through comprehensive logs.
 
-source venv/bin/activate  # Linux/macOS
+🌐 Modern Web Interface
 
-venv\Scripts\activate     # Windows
+Easy-to-use interface for:
 
-pip install -r requirements.txt
+Viewing timetables
+Managing schedules
+Reviewing logs
+Printing results
+🌍 RTL Language Support
 
-python manage.py migrate
+Fully supports right-to-left languages including Persian (Farsi).
 
-python manage.py runserver
---------------------------------------------------------------------------------------
-Usage:
+📁 Excel Export
 
-Go to Admin panel
+Export generated schedules directly to Excel files.
 
-Add Teachers(All of requireds is Here), Classes, Lessons, Grades,Day periods,School days
+📝 Log Management
+View scheduler logs
+Print logs
+Clear logs
+Diagnose scheduling issues
+🖼️ Overview
 
-Click Build Schedule to generate
+The scheduler intelligently allocates lessons across the school week while balancing:
 
-View Timetable in main page 
+Teacher workloads
+Class requirements
+Weekly lesson hours
+Subject priorities
+Teacher availability
 
-View logs in Schedule Logs page
+The result is a clean, conflict-free timetable generated automatically.
 
-Print or clear logs as needed
---------------------------------------------------------------------------------------
+⚙️ Usage
+1. Access the Admin Panel
 
-License
+Create and manage:
 
-MIT License
+Teachers
+Classes
+Lessons
+Grades
+School Days
+Day Periods
+2. Generate Schedule
+
+Click:
+
+Build Schedule
+
+The system will automatically create the timetable.
+
+3. Review Results
+View generated schedules
+Check scheduling logs
+Export timetable to Excel
+Print schedules and logs
+4. Troubleshooting
+
+If scheduling cannot be completed successfully:
+
+Open Schedule Logs
+Review generated errors and warnings
+Adjust teacher availability or lesson requirements
+Rebuild the schedule
+🏗️ Technology Stack
+Python
+Django
+SQLite / PostgreSQL
+Bootstrap
+OpenPyXL
+
+📄 License
+
+This project is licensed under the MIT License.
+
+👨‍💻 Author
+Armin Mehri: www.arminmehri.ir
+
